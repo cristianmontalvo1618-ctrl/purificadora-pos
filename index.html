@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+        <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -9,28 +10,28 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
-  <header class="bg-teal-700 text-white p-4 shadow-md flex justify-between items-center">
-    <h1 class="text-xl font-bold">💧 Purificadora - Punto de Venta</h1>
-    <a href="admin.html" class="bg-teal-900 hover:bg-teal-800 text-white text-sm py-2 px-4 rounded-lg font-semibold">Ir a Admin ⚙️</a>
+  <header class="bg-teal-800 text-white p-4 shadow-md flex justify-between items-center">
+    <h1 class="text-xl font-bold">💧 Punto de Venta - Purificadora</h1>
+    <a href="admin.html" class="bg-teal-600 hover:bg-teal-700 text-white text-sm py-2 px-4 rounded-lg font-semibold transition">Panel Admin ⚙️</a>
   </header>
 
   <main class="p-6 flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Lista de Compra -->
-    <section class="md:col-span-2 bg-white rounded-xl shadow p-5 flex flex-col">
-      <div class="mb-4 flex gap-2">
-        <input type="text" id="barcodeInput" placeholder="Escanea o escribe código de barras..." class="flex-1 border p-3 rounded-lg text-lg focus:outline-teal-600 border-slate-300" autofocus>
-        <button onclick="buscarProducto()" class="bg-teal-600 text-white px-5 rounded-lg font-bold hover:bg-teal-700">Buscar</button>
+    <!-- Sección de Búsqueda y Carrito -->
+    <section class="md:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
+      <div class="mb-5 flex gap-3">
+        <input type="text" id="barcodeInput" placeholder="Escanea o escribe código de barras..." class="flex-1 border border-slate-300 p-3 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-inner" autofocus>
+        <button onclick="buscarProducto()" class="bg-teal-700 text-white px-6 rounded-xl font-bold hover:bg-teal-800 transition shadow">Buscar</button>
       </div>
 
       <div class="flex-1 overflow-y-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="border-b text-slate-500 text-sm">
-              <th class="p-2">Producto</th>
-              <th class="p-2">Precio</th>
-              <th class="p-2">Cant.</th>
-              <th class="p-2">Subtotal</th>
-              <th class="p-2 text-center">Acción</th>
+            <tr class="border-b text-slate-400 text-xs uppercase tracking-wider">
+              <th class="p-3">Producto</th>
+              <th class="p-3">Precio</th>
+              <th class="p-3">Cant.</th>
+              <th class="p-3">Subtotal</th>
+              <th class="p-3 text-center">Acción</th>
             </tr>
           </thead>
           <tbody id="carritoBody"></tbody>
@@ -39,54 +40,51 @@
     </section>
 
     <!-- Resumen y Cobro -->
-    <section class="bg-white rounded-xl shadow p-5 flex flex-col justify-between">
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
       <div>
-        <h2 class="text-xl font-bold border-b pb-2 mb-4">Resumen de Venta</h2>
-        <div class="flex justify-between items-center text-2xl font-black mb-6">
-          <span>Total:</span>
+        <h2 class="text-lg font-bold text-slate-700 border-b pb-3 mb-4">Resumen de Venta</h2>
+        <div class="flex justify-between items-center text-3xl font-black mb-6">
+          <span class="text-slate-500 text-lg">Total:</span>
           <span class="text-teal-700" id="totalVenta">$0.00</span>
         </div>
 
-        <!-- Tipo de Pago -->
-        <label class="block text-sm font-bold mb-2">Método de Pago:</label>
-        <select id="metodoPago" onchange="toggleCreditoCampos()" class="w-full border p-2 rounded-lg mb-4">
-          <option value="Efectivo">Contado / Efectivo</option>
+        <label class="block text-sm font-bold text-slate-600 mb-2">Método de Pago:</label>
+        <select id="metodoPago" onchange="toggleCreditoCampos()" class="w-full border border-slate-300 p-3 rounded-xl mb-4 focus:ring-2 focus:ring-teal-500 outline-none">
+          <option value="Efectivo">Contado / Efectivo 💵</option>
           <option value="Credito">A Plazo / Crédito ⏳</option>
         </select>
 
-        <div id="camposCredito" class="hidden space-y-3 bg-slate-50 p-3 rounded-lg border mb-4">
-          <input type="text" id="clienteNombre" placeholder="Nombre del Cliente" class="w-full border p-2 rounded text-sm">
-          <input type="tel" id="clienteTel" placeholder="Teléfono" class="w-full border p-2 rounded text-sm">
-          <label class="block text-xs font-bold text-slate-600">Fecha Límite de Pago:</label>
-          <input type="date" id="fechaLimite" class="w-full border p-2 rounded text-sm">
+        <div id="camposCredito" class="hidden space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
+          <input type="text" id="clienteNombre" placeholder="Nombre del Cliente" class="w-full border border-slate-300 p-2 rounded-lg text-sm">
+          <input type="tel" id="clienteTel" placeholder="Teléfono" class="w-full border border-slate-300 p-2 rounded-lg text-sm">
+          <label class="block text-xs font-bold text-slate-500">Fecha Límite de Pago:</label>
+          <input type="date" id="fechaLimite" class="w-full border border-slate-300 p-2 rounded-lg text-sm">
         </div>
       </div>
 
-      <button onclick="procesarVenta()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl text-lg shadow-lg">
+      <button onclick="procesarVenta()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl text-lg shadow-md transition transform active:scale-95">
         ✅ Finalizar Venta
       </button>
     </section>
   </main>
 
   <script>
-    // PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE REAL
-     const firebaseConfig = {
-  apiKey: "AIzaSyCrkP1I6pplC-Qk02QhPxSiXK-0ZkEwEkQ",
-  authDomain: "purificadorapos.firebaseapp.com",
-  projectId: "purificadorapos",
-  storageBucket: "purificadorapos.firebasestorage.app",
-  messagingSenderId: "484666109632",
-  appId: "1:484666109632:web:fb6698a3e11c19f6dec725"
-};
-    
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrkP1I6pplC-Qk02QhPxSiXK-0ZkEwEkQ",
+      authDomain: "purificadorapos.firebaseapp.com",
+      projectId: "purificadorapos",
+      storageBucket: "purificadorapos.firebasestorage.app",
+      messagingSenderId: "484666109632",
+      appId: "1:484666109632:web:fb6698a3e11c19f6dec725"
+    };
 
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     let carrito = [];
-
-    // Mantener siempre el cursor listo para el scanner
     const barcodeInput = document.getElementById("barcodeInput");
+
+    // Foco automático permanente para el lector de barras
     document.addEventListener("click", (e) => {
       if (e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT" && e.target.tagName !== "BUTTON") {
         barcodeInput.focus();
@@ -135,13 +133,13 @@
         const subtotal = p.precio * p.cant;
         total += subtotal;
         tbody.innerHTML += `
-          <tr class="border-b">
-            <td class="p-2 font-semibold">${p.nombre}</td>
-            <td class="p-2">$${p.precio.toFixed(2)}</td>
-            <td class="p-2">${p.cant}</td>
-            <td class="p-2 font-bold">$${subtotal.toFixed(2)}</td>
-            <td class="p-2 text-center">
-              <button onclick="eliminarItem(${idx})" class="text-red-500 font-bold hover:text-red-700">✕</button>
+          <tr class="border-b border-slate-100 hover:bg-slate-50">
+            <td class="p-3 font-semibold text-slate-700">${p.nombre}</td>
+            <td class="p-3 text-slate-600">$${p.precio.toFixed(2)}</td>
+            <td class="p-3 font-bold">${p.cant}</td>
+            <td class="p-3 font-bold text-teal-700">$${subtotal.toFixed(2)}</td>
+            <td class="p-3 text-center">
+              <button onclick="eliminarItem(${idx})" class="text-rose-500 font-bold hover:text-rose-700 p-1">✕</button>
             </td>
           </tr>
         `;
@@ -184,7 +182,6 @@
 
       await db.collection("ventas").add(venta);
 
-      // Descontar inventario
       for (let item of carrito) {
         const ref = db.collection("productos").doc(item.id);
         const doc = await ref.get();
@@ -194,7 +191,7 @@
         }
       }
 
-      alert("Venta registrada con éxito");
+      alert("¡Venta registrada con éxito!");
       carrito = [];
       renderCarrito();
       barcodeInput.focus();
