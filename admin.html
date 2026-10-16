@@ -3,138 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Purificadora POS - Panel de Administración</title>
-  <!-- Tailwind CSS CDN -->
+  <title>Panel de Administración - Purificadora</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
-<body class="bg-slate-100 font-sans antialiased text-slate-800 min-h-screen flex flex-col">
-
-  <!-- Encabezado -->
-  <header class="bg-gradient-to-r from-slate-800 to-teal-900 text-white shadow-lg sticky top-0 z-20">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center space-x-3">
-        <div class="bg-teal-500/20 p-2 rounded-lg border border-teal-400/30">
-          <i class="fa-solid fa-sliders text-2xl text-teal-300"></i>
-        </div>
-        <div>
-          <h1 class="font-bold text-xl tracking-wide">Panel de Administración</h1>
-          <p class="text-xs text-teal-200">Inventario y Registro de Productos</p>
-        </div>
-      </div>
-      <a href="index.html" class="bg-teal-600 hover:bg-teal-500 text-white font-semibold text-xs px-3 py-2 rounded-lg shadow flex items-center space-x-2 transition">
-        <i class="fa-solid fa-cash-register"></i>
-        <span>Ir a Caja / POS</span>
-      </a>
-    </div>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
+  <header class="bg-teal-900 text-white p-4 shadow-md flex justify-between items-center">
+    <h1 class="text-xl font-bold">⚙️ Admin - Purificadora</h1>
+    <a href="index.html" class="bg-teal-600 hover:bg-teal-700 text-white text-sm py-2 px-4 rounded-lg font-semibold">Ir a Caja / POS 🛒</a>
   </header>
 
-  <!-- Contenido Principal -->
-  <main class="max-w-7xl mx-auto px-4 py-6 flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
-    
-    <!-- Formulario para Registrar Producto -->
-    <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 h-fit">
-      <h2 class="font-bold text-slate-800 text-lg border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">
-        <i class="fa-solid fa-box-archive text-teal-600"></i> Registrar Producto
-      </h2>
-
-      <form id="formProducto" onsubmit="guardarProducto(event)" class="space-y-4">
-        <!-- Código de Barras -->
-        <div>
-          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Código de Barras / QR</label>
-          <div class="relative">
-            <input type="text" id="prodCodigo" placeholder="Ej. 7501001" required class="w-full text-sm p-3 pl-10 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none font-mono">
-            <i class="fa-solid fa-barcode absolute left-3 top-3.5 text-slate-400"></i>
+  <main class="p-6 max-w-7xl mx-auto w-full space-y-8">
+    <!-- Registro y Lista de Productos -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section class="bg-white p-5 rounded-xl shadow">
+        <h2 class="font-bold text-lg mb-4 text-teal-800">Registrar / Editar Producto</h2>
+        <form id="formProducto" onsubmit="guardarProducto(event)" class="space-y-3">
+          <input type="text" id="prodCodigo" placeholder="Código de Barras / QR" class="w-full border p-2 rounded" required>
+          <input type="text" id="prodNombre" placeholder="Nombre del Producto" class="w-full border p-2 rounded" required>
+          <input type="text" id="prodCategoria" placeholder="Categoría (Ej. Garrafones, Filtros)" class="w-full border p-2 rounded" required>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="number" step="0.01" id="prodPrecio" placeholder="Precio ($)" class="border p-2 rounded" required>
+            <input type="number" id="prodStock" placeholder="Stock Inicial" class="border p-2 rounded" required>
           </div>
-          <p class="text-[11px] text-slate-400 mt-1">Escanea o escribe el código de fábrica.</p>
-        </div>
+          <button type="submit" class="w-full bg-teal-700 text-white font-bold py-2 rounded hover:bg-teal-800">Guardar Producto</button>
+        </form>
+      </section>
 
-        <!-- Nombre del Producto -->
-        <div>
-          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Nombre del Producto</label>
-          <input type="text" id="prodNombre" placeholder="Ej. Filtro Sedimentos 5 micras" required class="w-full text-sm p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none">
-        </div>
+      <section class="md:col-span-2 bg-white p-5 rounded-xl shadow overflow-x-auto">
+        <h2 class="font-bold text-lg mb-4 text-teal-800">Inventario Registrado</h2>
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b text-sm text-slate-500">
+              <th class="p-2">Código</th>
+              <th class="p-2">Producto</th>
+              <th class="p-2">Categoría</th>
+              <th class="p-2">Precio</th>
+              <th class="p-2">Stock</th>
+            </tr>
+          </thead>
+          <tbody id="tablaInventario"></tbody>
+        </table>
+      </section>
+    </div>
 
-        <!-- Categoría -->
-        <div>
-          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Categoría</label>
-          <select id="prodCategoria" class="w-full text-sm p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none text-slate-700 bg-white">
-            <option value="Filtros">Filtros y Cartuchos</option>
-            <option value="Envases">Envases y Tapas</option>
-            <option value="Insumos">Insumos y Químicos</option>
-            <option value="Equipos">Equipos y Refacciones</option>
-            <option value="General">General / Otros</option>
-          </select>
-        </div>
-
-        <!-- Precio y Stock -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Precio ($ MXN)</label>
-            <input type="number" step="0.50" id="prodPrecio" placeholder="0.00" required class="w-full text-sm p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Stock Inicial</label>
-            <input type="number" id="prodStock" placeholder="0" required class="w-full text-sm p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none">
-          </div>
-        </div>
-
-        <!-- Botón Guardar -->
-        <div class="pt-2">
-          <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl shadow transition flex justify-center items-center gap-2">
-            <i class="fa-solid fa-floppy-disk"></i>
-            <span>Guardar Producto</span>
-          </button>
-        </div>
-      </form>
+    <!-- Cuentas por Cobrar (Crédito) -->
+    <section class="bg-white p-5 rounded-xl shadow overflow-x-auto">
+      <h2 class="font-bold text-lg mb-4 text-amber-700">⏳ Cuentas por Cobrar / Ventas a Plazo</h2>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b text-sm text-slate-500">
+            <th class="p-2">Cliente</th>
+            <th class="p-2">Teléfono</th>
+            <th class="p-2">Total Deuda</th>
+            <th class="p-2">Fecha Límite</th>
+            <th class="p-2">Estado</th>
+            <th class="p-2">Acción</th>
+          </tr>
+        </thead>
+        <tbody id="tablaCreditos"></tbody>
+      </table>
     </section>
 
-    <!-- Lista de Inventario -->
-    <section class="lg:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
-      <div>
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-          <h2 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-            <i class="fa-solid fa-list-check text-teal-600"></i> Inventario Registrado
-          </h2>
-          <span id="totalItems" class="text-xs bg-teal-100 text-teal-800 font-bold px-2.5 py-1 rounded-full">0 Productos</span>
-        </div>
-
-        <!-- Tabla -->
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm border-collapse">
-            <thead>
-              <tr class="bg-slate-50 text-slate-500 border-b border-slate-200 text-xs uppercase font-semibold">
-                <th class="p-3">Código</th>
-                <th class="p-3">Producto</th>
-                <th class="p-3">Categoría</th>
-                <th class="p-3">Precio</th>
-                <th class="p-3">Stock</th>
-                <th class="p-3 text-center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tablaInventario" class="divide-y divide-slate-100">
-              <tr>
-                <td colspan="6" class="text-center py-8 text-slate-400">
-                  <i class="fa-solid fa-spinner animate-spin text-2xl text-teal-600 block mb-2"></i>
-                  Cargando inventario de Firebase...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    <!-- Historial de Ventas y Exportación Excel -->
+    <section class="bg-white p-5 rounded-xl shadow overflow-x-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="font-bold text-lg text-emerald-800">📊 Historial de Ventas</h2>
+        <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-4 py-2 rounded-lg">
+          📥 Exportar a Excel (CSV)
+        </button>
       </div>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b text-sm text-slate-500">
+            <th class="p-2">Fecha / Hora</th>
+            <th class="p-2">Método</th>
+            <th class="p-2">Total</th>
+            <th class="p-2">Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tablaVentas"></tbody>
+      </table>
     </section>
-
   </main>
 
-  <!-- Lógica de Admin -->
   <script>
-    // ⚠️ REEMPLAZA ESTE BLOQUE CON TUS CREDENCIALES DE FIREBASE
- const firebaseConfig = {
+    // PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE REAL
+    const firebaseConfig = {
   apiKey: "AIzaSyCrkP1I6pplC-Qk02QhPxSiXK-0ZkEwEkQ",
   authDomain: "purificadorapos.firebaseapp.com",
   projectId: "purificadorapos",
@@ -142,81 +98,104 @@
   messagingSenderId: "484666109632",
   appId: "1:484666109632:web:fb6698a3e11c19f6dec725"
 };
-    
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function cargarInventario() {
-      db.collection("productos").onSnapshot((snapshot) => {
-        const tbody = document.getElementById("tablaInventario");
-        const totalBadge = document.getElementById("totalItems");
-        tbody.innerHTML = "";
+    let ventasGlobales = [];
 
-        if (snapshot.empty) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400">No hay productos registrados en la base de datos.</td></tr>';
-          totalBadge.innerText = "0 Productos";
-          return;
-        }
+    // Cargar Inventario
+    db.collection("productos").onSnapshot(snap => {
+      const tbody = document.getElementById("tablaInventario");
+      tbody.innerHTML = "";
+      snap.forEach(doc => {
+        const p = doc.data();
+        tbody.innerHTML += `
+          <tr class="border-b">
+            <td class="p-2">${p.codigo}</td>
+            <td class="p-2 font-semibold">${p.nombre}</td>
+            <td class="p-2">${p.categoria}</td>
+            <td class="p-2">$${parseFloat(p.precio).toFixed(2)}</td>
+            <td class="p-2 font-bold ${p.stock < 5 ? 'text-red-600' : 'text-emerald-600'}">${p.stock}</td>
+          </tr>
+        `;
+      });
+    });
 
-        totalBadge.innerText = `${snapshot.size} Productos`;
-
-        snapshot.forEach((doc) => {
-          const p = doc.data();
-          const id = doc.id;
-          const tr = document.createElement("tr");
-          tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
-          tr.innerHTML = `
-            <td class="p-3 font-mono text-xs font-bold text-slate-600">${p.codigo}</td>
-            <td class="p-3 font-semibold text-slate-800">${p.nombre}</td>
-            <td class="p-3"><span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-medium">${p.categoria}</span></td>
-            <td class="p-3 font-bold text-teal-700">$${parseFloat(p.precio).toFixed(2)}</td>
-            <td class="p-3 font-bold ${p.stock < 5 ? 'text-red-500' : 'text-slate-700'}">${p.stock}</td>
-            <td class="p-3 text-center">
-              <button onclick="eliminarProducto('${id}')" class="text-red-500 hover:text-red-700 p-1 rounded transition" title="Eliminar"><i class="fa-solid fa-trash-can"></i></button>
+    // Cargar Cuentas por Cobrar
+    db.collection("ventas").where("metodoPago", "==", "Credito").onSnapshot(snap => {
+      const tbody = document.getElementById("tablaCreditos");
+      tbody.innerHTML = "";
+      snap.forEach(doc => {
+        const v = doc.data();
+        tbody.innerHTML += `
+          <tr class="border-b">
+            <td class="p-2 font-semibold">${v.cliente || 'N/A'}</td>
+            <td class="p-2">${v.telefono || 'N/A'}</td>
+            <td class="p-2 font-bold text-amber-700">$${parseFloat(v.total).toFixed(2)}</td>
+            <td class="p-2">${v.fechaLimite || 'N/A'}</td>
+            <td class="p-2"><span class="px-2 py-1 rounded text-xs font-bold ${v.estado === 'Pagado' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${v.estado}</span></td>
+            <td class="p-2">
+              ${v.estado !== 'Pagado' ? `<button onclick="marcarPagado('${doc.id}')" class="bg-emerald-600 text-white text-xs px-2 py-1 rounded">Marcar Pagado</button>` : '---'}
             </td>
-          `;
-          tbody.appendChild(tr);
-        });
+          </tr>
+        `;
       });
-    }
+    });
 
-    function guardarProducto(e) {
+    // Cargar Historial de Ventas
+    db.collection("ventas").onSnapshot(snap => {
+      const tbody = document.getElementById("tablaVentas");
+      tbody.innerHTML = "";
+      ventasGlobales = [];
+      snap.forEach(doc => {
+        const v = doc.data();
+        ventasGlobales.push(v);
+        tbody.innerHTML += `
+          <tr class="border-b">
+            <td class="p-2 text-sm">${new Date(v.fecha).toLocaleString()}</td>
+            <td class="p-2">${v.metodoPago}</td>
+            <td class="p-2 font-bold">$${parseFloat(v.total).toFixed(2)}</td>
+            <td class="p-2">${v.estado}</td>
+          </tr>
+        `;
+      });
+    });
+
+    async function guardarProducto(e) {
       e.preventDefault();
-      const codigo = document.getElementById("prodCodigo").value.trim();
-      const nombre = document.getElementById("prodNombre").value.trim();
-      const categoria = document.getElementById("prodCategoria").value;
-      const precio = parseFloat(document.getElementById("prodPrecio").value);
-      const stock = parseInt(document.getElementById("prodStock").value);
+      const p = {
+        codigo: document.getElementById("prodCodigo").value.trim(),
+        nombre: document.getElementById("prodNombre").value.trim(),
+        categoria: document.getElementById("prodCategoria").value.trim(),
+        precio: parseFloat(document.getElementById("prodPrecio").value),
+        stock: parseInt(document.getElementById("prodStock").value)
+      };
 
-      db.collection("productos").add({
-        codigo,
-        nombre,
-        categoria,
-        precio,
-        stock,
-        fechaCreacion: firebase.firestore.FieldValue.serverTimestamp()
-      })
-      .then(() => {
-        alert("¡Producto guardado con éxito!");
-        document.getElementById("formProducto").reset();
-      })
-      .catch((error) => {
-        alert("Error al guardar: " + error.message);
+      await db.collection("productos").add(p);
+      document.getElementById("formProducto").reset();
+      alert("Producto registrado correctamente");
+    }
+
+    async function marcarPagado(id) {
+      await db.collection("ventas").doc(id).update({ estado: "Pagado" });
+      alert("Crédito marcado como pagado.");
+    }
+
+    function exportarExcel() {
+      if (ventasGlobales.length === 0) return alert("No hay ventas para exportar.");
+
+      let csv = "Fecha,Metodo_Pago,Total,Estado,Cliente,Telefono\n";
+      ventasGlobales.forEach(v => {
+        csv += `"${new Date(v.fecha).toLocaleString()}","${v.metodoPago}","${v.total}","${v.estado}","${v.cliente || ''}","${v.telefono || ''}"\n`;
       });
-    }
 
-    function eliminarProducto(id) {
-      if (confirm("¿Estás seguro de que deseas eliminar este producto?")) {
-        db.collection("productos").doc(id).delete()
-        .then(() => alert("Producto eliminado."))
-        .catch((error) => alert("Error al eliminar: " + error.message));
-      }
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Reporte_Ventas_Purificadora_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
     }
-
-    window.onload = cargarInventario;
   </script>
 </body>
 </html>
