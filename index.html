@@ -3,407 +3,201 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Purificadora POS - Punto de Venta</title>
-  <!-- Tailwind CSS CDN -->
+  <title>Purificadora POS - Caja</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0fdfa',
-              100: '#ccfbf1',
-              500: '#14b8a6',
-              600: '#0d9488',
-              700: '#0f766e',
-              900: '#134e4a',
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
-<body class="bg-slate-100 font-sans antialiased text-slate-800 min-h-screen flex flex-col">
-
-  <!-- Encabezado -->
-  <header class="bg-gradient-to-r from-cyan-600 to-teal-700 text-white shadow-lg sticky top-0 z-20">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center space-x-3">
-        <div class="bg-white/20 p-2 rounded-lg">
-          <i class="fa-solid fa-droplet text-2xl text-cyan-200"></i>
-        </div>
-        <div>
-          <h1 class="font-bold text-xl tracking-wide">Purificadora POS</h1>
-          <p class="text-xs text-cyan-100">Sistemas & Equipos de Purificación</p>
-        </div>
-      </div>
-      <div class="flex items-center space-x-2">
-        <button onclick="abrirModalScanner()" class="bg-cyan-500 hover:bg-cyan-400 text-white font-semibold px-4 py-2 rounded-lg shadow flex items-center space-x-2 transition">
-          <i class="fa-solid fa-barcode"></i>
-          <span class="hidden sm:inline">Escanear Código</span>
-        </button>
-        <a href="admin.html" class="bg-teal-800 hover:bg-teal-900 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow transition flex items-center space-x-1">
-          <i class="fa-solid fa-sliders"></i>
-          <span class="hidden sm:inline">Admin</span>
-        </a>
-      </div>
-    </div>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
+  <header class="bg-teal-700 text-white p-4 shadow-md flex justify-between items-center">
+    <h1 class="text-xl font-bold">💧 Purificadora - Punto de Venta</h1>
+    <a href="admin.html" class="bg-teal-900 hover:bg-teal-800 text-white text-sm py-2 px-4 rounded-lg font-semibold">Ir a Admin ⚙️</a>
   </header>
 
-  <!-- Contenido Principal -->
-  <main class="max-w-7xl mx-auto px-4 py-6 flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
-    
-    <!-- Catálogo de Productos -->
-    <section class="lg:col-span-2 flex flex-col space-y-4">
-      
-      <!-- Buscador -->
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-3">
-        <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
-        <input type="text" id="inputBuscar" onkeyup="filtrarProductos()" placeholder="Buscar producto, insumo o código..." class="w-full focus:outline-none text-slate-700 placeholder-slate-400">
+  <main class="p-6 flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Lista de Compra -->
+    <section class="md:col-span-2 bg-white rounded-xl shadow p-5 flex flex-col">
+      <div class="mb-4 flex gap-2">
+        <input type="text" id="barcodeInput" placeholder="Escanea o escribe código de barras..." class="flex-1 border p-3 rounded-lg text-lg focus:outline-teal-600 border-slate-300" autofocus>
+        <button onclick="buscarProducto()" class="bg-teal-600 text-white px-5 rounded-lg font-bold hover:bg-teal-700">Buscar</button>
       </div>
 
-      <!-- Contenedor dinámico de Productos desde Firebase -->
-      <div id="gridProductos" class="grid grid-cols-2 sm:grid-cols-3 gap-4 overflow-y-auto max-h-[calc(100vh-220px)] p-1">
-        <div class="col-span-full text-center py-12 text-slate-400">
-          <i class="fa-solid fa-spinner animate-spin text-3xl text-teal-600 mb-3 block"></i>
-          Conectando con el inventario...
-        </div>
+      <div class="flex-1 overflow-y-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b text-slate-500 text-sm">
+              <th class="p-2">Producto</th>
+              <th class="p-2">Precio</th>
+              <th class="p-2">Cant.</th>
+              <th class="p-2">Subtotal</th>
+              <th class="p-2 text-center">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="carritoBody"></tbody>
+        </table>
       </div>
     </section>
 
-    <!-- Carrito de Compras -->
-    <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between h-[calc(100vh-140px)]">
+    <!-- Resumen y Cobro -->
+    <section class="bg-white rounded-xl shadow p-5 flex flex-col justify-between">
       <div>
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-          <h2 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-            <i class="fa-solid fa-cart-shopping text-teal-600"></i> Orden Actual
-          </h2>
-          <button onclick="vaciarCarrito()" class="text-xs text-red-500 hover:underline">Vaciar</button>
+        <h2 class="text-xl font-bold border-b pb-2 mb-4">Resumen de Venta</h2>
+        <div class="flex justify-between items-center text-2xl font-black mb-6">
+          <span>Total:</span>
+          <span class="text-teal-700" id="totalVenta">$0.00</span>
         </div>
 
-        <div id="listaCarrito" class="divide-y divide-slate-100 overflow-y-auto max-h-[300px] mt-2">
-          <p id="carritoVacio" class="text-slate-400 text-center py-8 text-sm">Aún no hay productos añadidos</p>
-        </div>
-      </div>
+        <!-- Tipo de Pago -->
+        <label class="block text-sm font-bold mb-2">Método de Pago:</label>
+        <select id="metodoPago" onchange="toggleCreditoCampos()" class="w-full border p-2 rounded-lg mb-4">
+          <option value="Efectivo">Contado / Efectivo</option>
+          <option value="Credito">A Plazo / Crédito ⏳</option>
+        </select>
 
-      <!-- Métodos de Pago Requeridos -->
-      <div class="border-t border-slate-200 pt-4 mt-2">
-        <div class="flex justify-between items-center mb-4">
-          <span class="text-slate-500 text-sm font-medium">Total a pagar:</span>
-          <span id="txtTotal" class="text-2xl font-black text-teal-700">$0.00</span>
-        </div>
-
-        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Seleccione Método de Pago:</p>
-        
-        <div class="grid grid-cols-3 gap-2">
-          <!-- Efectivo -->
-          <button onclick="abrirModalPago('efectivo')" class="bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-2 rounded-xl font-bold text-xs shadow flex flex-col items-center space-y-1 transition">
-            <i class="fa-solid fa-money-bill-wave text-base"></i>
-            <span>Efectivo</span>
-          </button>
-
-          <!-- Transferencia -->
-          <button onclick="abrirModalPago('transferencia')" class="bg-sky-600 hover:bg-sky-700 text-white py-3 px-2 rounded-xl font-bold text-xs shadow flex flex-col items-center space-y-1 transition">
-            <i class="fa-solid fa-building-columns text-base"></i>
-            <span>Transferencia</span>
-          </button>
-
-          <!-- Pago a Plazo -->
-          <button onclick="abrirModalPago('credito')" class="bg-amber-600 hover:bg-amber-700 text-white py-3 px-2 rounded-xl font-bold text-xs shadow flex flex-col items-center space-y-1 transition">
-            <i class="fa-solid fa-calendar-days text-base"></i>
-            <span>A Plazo</span>
-          </button>
+        <div id="camposCredito" class="hidden space-y-3 bg-slate-50 p-3 rounded-lg border mb-4">
+          <input type="text" id="clienteNombre" placeholder="Nombre del Cliente" class="w-full border p-2 rounded text-sm">
+          <input type="tel" id="clienteTel" placeholder="Teléfono" class="w-full border p-2 rounded text-sm">
+          <label class="block text-xs font-bold text-slate-600">Fecha Límite de Pago:</label>
+          <input type="date" id="fechaLimite" class="w-full border p-2 rounded text-sm">
         </div>
       </div>
+
+      <button onclick="procesarVenta()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl text-lg shadow-lg">
+        ✅ Finalizar Venta
+      </button>
     </section>
-
   </main>
 
-  <!-- MODALES DE PAGO -->
-
-  <!-- Modal Efectivo (Cambio automático) -->
-  <div id="modalEfectivo" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center space-y-4">
-      <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl">
-        <i class="fa-solid fa-cash-register"></i>
-      </div>
-      <h3 class="text-lg font-bold text-slate-800">Pago en Efectivo</h3>
-      <p class="text-xs text-slate-500">Total Venta: <span id="modalTotalEfectivo" class="font-bold text-slate-700">$0.00</span></p>
-      
-      <div class="text-left space-y-1">
-        <label class="text-xs font-semibold text-slate-600">¿Con cuánto paga el cliente?</label>
-        <input type="number" id="inputPagaCon" oninput="calcularCambio()" placeholder="0.00" class="w-full text-lg font-bold p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-      </div>
-
-      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-        <span class="text-xs text-slate-500 block">Cambio a entregar:</span>
-        <span id="txtCambio" class="text-2xl font-black text-emerald-600">$0.00</span>
-      </div>
-
-      <div class="flex space-x-2 pt-2">
-        <button onclick="cerrarModales()" class="w-1/2 py-2.5 text-slate-500 font-semibold text-sm hover:bg-slate-100 rounded-xl">Cancelar</button>
-        <button onclick="finalizarVenta('Efectivo')" class="w-1/2 bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow hover:bg-emerald-700 text-sm">Confirmar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Transferencia (Aviso de verificación) -->
-  <div id="modalTransferencia" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center space-y-4">
-      <div class="w-12 h-12 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center mx-auto text-xl">
-        <i class="fa-solid fa-mobile-screen-button"></i>
-      </div>
-      <h3 class="text-lg font-bold text-slate-800">Verificación de Transferencia</h3>
-      
-      <div class="bg-sky-50 border border-sky-200 p-4 rounded-xl text-sky-900 text-sm font-medium leading-relaxed">
-        <i class="fa-solid fa-triangle-exclamation text-sky-600 mb-1 block text-lg"></i>
-        "Por favor, verifique en su aplicación bancaria o terminal que la transferencia se haya realizado exitosamente antes de entregar el producto."
-      </div>
-
-      <div class="flex space-x-2 pt-2">
-        <button onclick="cerrarModales()" class="w-1/2 py-2.5 text-slate-500 font-semibold text-sm hover:bg-slate-100 rounded-xl">Cancelar</button>
-        <button onclick="finalizarVenta('Transferencia')" class="w-1/2 bg-sky-600 text-white font-bold py-2.5 rounded-xl shadow hover:bg-sky-700 text-sm">Verificada</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Pago a Plazo (Calendario / Recordatorio) -->
-  <div id="modalCredito" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center space-y-4">
-      <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-xl">
-        <i class="fa-solid fa-calendar-check"></i>
-      </div>
-      <h3 class="text-lg font-bold text-slate-800">Pago a Plazo (Crédito)</h3>
-
-      <div class="text-left space-y-3">
-        <div>
-          <label class="text-xs font-semibold text-slate-600">Cliente / Negocio:</label>
-          <input type="text" id="inputClienteCredito" placeholder="Nombre de la purificadora o cliente" class="w-full text-sm p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
-        </div>
-
-        <div>
-          <label class="text-xs font-semibold text-slate-600">Fecha límite de pago (Recordatorio):</label>
-          <input type="date" id="inputFechaCredito" class="w-full text-sm p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-700">
-        </div>
-      </div>
-
-      <p class="text-[11px] text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200">
-        Se programará un recordatorio automático en el sistema para la fecha establecida.
-      </p>
-
-      <div class="flex space-x-2 pt-2">
-        <button onclick="cerrarModales()" class="w-1/2 py-2.5 text-slate-500 font-semibold text-sm hover:bg-slate-100 rounded-xl">Cancelar</button>
-        <button onclick="finalizarVenta('Pago a Plazo')" class="w-1/2 bg-amber-600 text-white font-bold py-2.5 rounded-xl shadow hover:bg-amber-700 text-sm">Guardar Venta</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Escáner -->
-  <div id="modalScanner" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center space-y-4">
-      <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto text-xl">
-        <i class="fa-solid fa-barcode"></i>
-      </div>
-      <h3 class="text-lg font-bold text-slate-800">Escáner de Código</h3>
-      <p class="text-xs text-slate-500">Ingrese o escanee el código de barras:</p>
-      
-      <input type="text" id="inputCodigoBarra" placeholder="Código..." class="w-full text-center font-mono font-bold text-base p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none">
-
-      <div class="flex space-x-2 pt-2">
-        <button onclick="cerrarModales()" class="w-1/2 py-2.5 text-slate-500 font-semibold text-sm hover:bg-slate-100 rounded-xl">Cancelar</button>
-        <button onclick="escanearCodigo()" class="w-1/2 bg-teal-600 text-white font-bold py-2.5 rounded-xl shadow hover:bg-teal-700 text-sm">Buscar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Lógica de Caja -->
   <script>
-    // ⚠️ REEMPLAZA ESTE BLOQUE CON TUS CREDENCIALES DE FIREBASE
-  const firebaseConfig = {
-  apiKey: "AIzaSyCrkP1I6pplC-Qk02QhPxSiXK-0ZkEwEkQ",
-  authDomain: "purificadorapos.firebaseapp.com",
-  projectId: "purificadorapos",
-  storageBucket: "purificadorapos.firebasestorage.app",
-  messagingSenderId: "484666109632",
-  appId: "1:484666109632:web:fb6698a3e11c19f6dec725"
-};
+    // PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE REAL
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrkP1I6pplC-Qk02QhPxSiXK-0ZkEwEkQ",
+      authDomain: "purificadorapos.firebaseapp.com",
+      projectId: "purificadorapos",
+      storageBucket: "purificadorapos.firebasestorage.app",
+      messagingSenderId: "484666109632",
+      appId: "1:484666109632:web:fb6698a3e11c19f6dec725"
+    };
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let productosLista = [];
     let carrito = [];
-    let total = 0;
 
-    function cargarProductos() {
-      db.collection("productos").onSnapshot((snapshot) => {
-        productosLista = [];
-        const grid = document.getElementById("gridProductos");
-        grid.innerHTML = "";
+    // Mantener siempre el cursor listo para el scanner
+    const barcodeInput = document.getElementById("barcodeInput");
+    document.addEventListener("click", (e) => {
+      if (e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT" && e.target.tagName !== "BUTTON") {
+        barcodeInput.focus();
+      }
+    });
 
-        if (snapshot.empty) {
-          grid.innerHTML = '<div class="col-span-full text-center py-12 text-slate-400">No hay productos registrados. Ve al panel Admin para agregar nuevos.</div>';
-          return;
+    barcodeInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        buscarProducto();
+      }
+    });
+
+    function toggleCreditoCampos() {
+      const metodo = document.getElementById("metodoPago").value;
+      document.getElementById("camposCredito").classList.toggle("hidden", metodo !== "Credito");
+    }
+
+    async function buscarProducto() {
+      const codigo = barcodeInput.value.trim();
+      if (!codigo) return;
+
+      const snap = await db.collection("productos").where("codigo", "==", codigo).get();
+      if (snap.empty) {
+        alert("Producto no encontrado");
+      } else {
+        const prod = { id: snap.docs[0].id, ...snap.docs[0].data() };
+        const index = carrito.findIndex(i => i.id === prod.id);
+        if (index > -1) {
+          carrito[index].cant++;
+        } else {
+          carrito.push({ ...prod, cant: 1 });
+        }
+        renderCarrito();
+      }
+      barcodeInput.value = "";
+      barcodeInput.focus();
+    }
+
+    function renderCarrito() {
+      const tbody = document.getElementById("carritoBody");
+      tbody.innerHTML = "";
+      let total = 0;
+
+      carrito.forEach((p, idx) => {
+        const subtotal = p.precio * p.cant;
+        total += subtotal;
+        tbody.innerHTML += `
+          <tr class="border-b">
+            <td class="p-2 font-semibold">${p.nombre}</td>
+            <td class="p-2">$${p.precio.toFixed(2)}</td>
+            <td class="p-2">${p.cant}</td>
+            <td class="p-2 font-bold">$${subtotal.toFixed(2)}</td>
+            <td class="p-2 text-center">
+              <button onclick="eliminarItem(${idx})" class="text-red-500 font-bold hover:text-red-700">✕</button>
+            </td>
+          </tr>
+        `;
+      });
+      document.getElementById("totalVenta").innerText = `$${total.toFixed(2)}`;
+    }
+
+    function eliminarItem(idx) {
+      carrito.splice(idx, 1);
+      renderCarrito();
+    }
+
+    async function procesarVenta() {
+      if (carrito.length === 0) return alert("El carrito está vacío");
+
+      const metodo = document.getElementById("metodoPago").value;
+      const total = carrito.reduce((sum, item) => sum + (item.precio * item.cant), 0);
+
+      const venta = {
+        fecha: new Date().toISOString(),
+        items: carrito,
+        total: total,
+        metodoPago: metodo,
+        estado: metodo === "Credito" ? "Pendiente" : "Pagado"
+      };
+
+      if (metodo === "Credito") {
+        const cliente = document.getElementById("clienteNombre").value.trim();
+        const tel = document.getElementById("clienteTel").value.trim();
+        const fechaLimite = document.getElementById("fechaLimite").value;
+
+        if (!cliente || !fechaLimite) {
+          return alert("Por favor ingresa el nombre del cliente y la fecha límite de pago.");
         }
 
-        snapshot.forEach((doc) => {
-          const p = doc.data();
-          p.id = doc.id;
-          productosLista.push(p);
-
-          const card = document.createElement("div");
-          card.className = "bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:border-teal-500 hover:shadow-md transition cursor-pointer flex flex-col justify-between";
-          card.onclick = () => agregarAlCarrito(p.nombre, p.precio);
-          card.innerHTML = `
-            <div>
-              <span class="text-[10px] font-bold bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full">${p.categoria}</span>
-              <h3 class="font-semibold text-slate-800 mt-2 text-sm">${p.nombre}</h3>
-              <p class="text-xs text-slate-500 mt-1">Cod: ${p.codigo}</p>
-            </div>
-            <div class="mt-4 flex justify-between items-center">
-              <span class="font-bold text-teal-700 text-base">$${parseFloat(p.precio).toFixed(2)}</span>
-              <span class="bg-slate-100 text-slate-600 p-1.5 rounded-lg hover:bg-teal-600 hover:text-white transition"><i class="fa-solid fa-plus"></i></span>
-            </div>
-          `;
-          grid.appendChild(card);
-        });
-      });
-    }
-
-    function agregarAlCarrito(nombre, precio) {
-      const item = carrito.find(i => i.nombre === nombre);
-      if (item) { item.cantidad += 1; } 
-      else { carrito.push({ nombre, precio, cantidad: 1 }); }
-      actualizarCarritoUI();
-    }
-
-    function actualizarCarritoUI() {
-      const contenedor = document.getElementById('listaCarrito');
-      const txtTotal = document.getElementById('txtTotal');
-      contenedor.innerHTML = '';
-
-      if (carrito.length === 0) {
-        contenedor.innerHTML = '<p class="text-slate-400 text-center py-8 text-sm">Aún no hay productos añadidos</p>';
-        total = 0;
-        txtTotal.innerText = '$0.00';
-        return;
+        venta.cliente = cliente;
+        venta.telefono = tel;
+        venta.fechaLimite = fechaLimite;
       }
 
-      total = 0;
-      carrito.forEach((prod, index) => {
-        const subtotal = prod.precio * prod.cantidad;
-        total += subtotal;
+      await db.collection("ventas").add(venta);
 
-        const row = document.createElement('div');
-        row.className = 'py-3 flex justify-between items-center text-sm';
-        row.innerHTML = `
-          <div>
-            <h4 class="font-semibold text-slate-800">${prod.nombre}</h4>
-            <p class="text-xs text-slate-400">$${prod.precio.toFixed(2)} x ${prod.cantidad}</p>
-          </div>
-          <div class="flex items-center space-x-3">
-            <span class="font-bold text-slate-700">$${subtotal.toFixed(2)}</span>
-            <button onclick="eliminarDelCarrito(${index})" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button>
-          </div>
-        `;
-        contenedor.appendChild(row);
-      });
+      // Descontar inventario
+      for (let item of carrito) {
+        const ref = db.collection("productos").doc(item.id);
+        const doc = await ref.get();
+        if (doc.exists) {
+          const nuevoStock = Math.max(0, (doc.data().stock || 0) - item.cant);
+          await ref.update({ stock: nuevoStock });
+        }
+      }
 
-      txtTotal.innerText = `$${total.toFixed(2)}`;
-    }
-
-    function eliminarDelCarrito(index) {
-      carrito.splice(index, 1);
-      actualizarCarritoUI();
-    }
-
-    function vaciarCarrito() {
+      alert("Venta registrada con éxito");
       carrito = [];
-      actualizarCarritoUI();
+      renderCarrito();
+      barcodeInput.focus();
     }
-
-    function abrirModalPago(tipo) {
-      if (carrito.length === 0) {
-        alert("Agrega productos al carrito antes de cobrar.");
-        return;
-      }
-      cerrarModales();
-      if (tipo === 'efectivo') {
-        document.getElementById('modalTotalEfectivo').innerText = `$${total.toFixed(2)}`;
-        document.getElementById('inputPagaCon').value = '';
-        document.getElementById('txtCambio').innerText = '$0.00';
-        document.getElementById('modalEfectivo').classList.remove('hidden');
-      } else if (tipo === 'transferencia') {
-        document.getElementById('modalTransferencia').classList.remove('hidden');
-      } else if (tipo === 'credito') {
-        document.getElementById('modalCredito').classList.remove('hidden');
-      }
-    }
-
-    function calcularCambio() {
-      const pagaCon = parseFloat(document.getElementById('inputPagaCon').value) || 0;
-      const cambio = pagaCon - total;
-      document.getElementById('txtCambio').innerText = `$${cambio > 0 ? cambio.toFixed(2) : '0.00'}`;
-    }
-
-    function abrirModalScanner() {
-      document.getElementById('modalScanner').classList.remove('hidden');
-      document.getElementById('inputCodigoBarra').focus();
-    }
-
-    function escanearCodigo() {
-      const cod = document.getElementById('inputCodigoBarra').value.trim();
-      const p = productosLista.find(item => item.codigo === cod);
-      if (p) {
-        agregarAlCarrito(p.nombre, p.precio);
-        cerrarModales();
-        document.getElementById('inputCodigoBarra').value = '';
-      } else {
-        alert("Código de barras no registrado en el inventario.");
-      }
-    }
-
-    function cerrarModales() {
-      document.getElementById('modalEfectivo').classList.add('hidden');
-      document.getElementById('modalTransferencia').classList.add('hidden');
-      document.getElementById('modalCredito').classList.add('hidden');
-      document.getElementById('modalScanner').classList.add('hidden');
-    }
-
-    function finalizarVenta(metodo) {
-      db.collection("ventas").add({
-        metodo,
-        total,
-        items: carrito,
-        fecha: firebase.firestore.FieldValue.serverTimestamp()
-      })
-      .then(() => {
-        alert(`¡Venta registrada con éxito mediante: ${metodo}!`);
-        vaciarCarrito();
-        cerrarModales();
-      })
-      .catch((error) => alert("Error al registrar venta: " + error.message));
-    }
-
-    function filtrarProductos() {
-      const query = document.getElementById('inputBuscar').value.toLowerCase();
-      const tarjetas = document.querySelectorAll('#gridProductos > div');
-      tarjetas.forEach(card => {
-        const texto = card.innerText.toLowerCase();
-        card.style.display = texto.includes(query) ? 'flex' : 'none';
-      });
-    }
-
-    window.onload = cargarProductos;
   </script>
 </body>
 </html>
