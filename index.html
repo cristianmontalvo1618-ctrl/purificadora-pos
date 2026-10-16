@@ -1,5 +1,4 @@
-
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -16,7 +15,7 @@
   </header>
 
   <main class="p-6 flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Sección de Búsqueda y Carrito -->
+    <!-- Lista de Compra -->
     <section class="md:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
       <div class="mb-5 flex gap-3">
         <input type="text" id="barcodeInput" placeholder="Escanea o escribe código de barras..." class="flex-1 border border-slate-300 p-3 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-inner" autofocus>
@@ -43,22 +42,49 @@
     <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
       <div>
         <h2 class="text-lg font-bold text-slate-700 border-b pb-3 mb-4">Resumen de Venta</h2>
-        <div class="flex justify-between items-center text-3xl font-black mb-6">
+        
+        <div class="flex justify-between items-center text-3xl font-black mb-4">
           <span class="text-slate-500 text-lg">Total:</span>
           <span class="text-teal-700" id="totalVenta">$0.00</span>
         </div>
 
+        <!-- Método de Pago -->
         <label class="block text-sm font-bold text-slate-600 mb-2">Método de Pago:</label>
-        <select id="metodoPago" onchange="toggleCreditoCampos()" class="w-full border border-slate-300 p-3 rounded-xl mb-4 focus:ring-2 focus:ring-teal-500 outline-none">
-          <option value="Efectivo">Contado / Efectivo 💵</option>
-          <option value="Credito">A Plazo / Crédito ⏳</option>
+        <select id="metodoPago" onchange="cambiarMetodoPago()" class="w-full border border-slate-300 p-3 rounded-xl mb-4 focus:ring-2 focus:ring-teal-500 outline-none">
+          <option value="Efectivo">💵 Efectivo</option>
+          <option value="Tarjeta">💳 Tarjeta</option>
+          <option value="Credito">⏳ A Plazo / Crédito</option>
         </select>
 
-        <div id="camposCredito" class="hidden space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
-          <input type="text" id="clienteNombre" placeholder="Nombre del Cliente" class="w-full border border-slate-300 p-2 rounded-lg text-sm">
-          <input type="tel" id="clienteTel" placeholder="Teléfono" class="w-full border border-slate-300 p-2 rounded-lg text-sm">
-          <label class="block text-xs font-bold text-slate-500">Fecha Límite de Pago:</label>
-          <input type="date" id="fechaLimite" class="w-full border border-slate-300 p-2 rounded-lg text-sm">
+        <!-- Bloque Pago Efectivo (Monto Pagado + Cambio + Billetes) -->
+        <div id="bloqueEfectivo" class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">Paga con ($ MXN):</label>
+            <input type="number" id="montoRecibido" oninput="calcularCambio()" placeholder="0.00" class="w-full border border-slate-300 p-2.5 rounded-lg text-lg font-bold text-slate-800 focus:ring-2 focus:ring-teal-500 outline-none">
+          </div>
+
+          <!-- Billetes Rápidos -->
+          <div class="grid grid-cols-3 gap-2 pt-1">
+            <button onclick="pagoRapido(20)" class="bg-white border border-slate-300 hover:bg-slate-100 font-bold py-1.5 rounded-lg text-xs text-slate-700 shadow-sm">$20</button>
+            <button onclick="pagoRapido(50)" class="bg-white border border-slate-300 hover:bg-slate-100 font-bold py-1.5 rounded-lg text-xs text-slate-700 shadow-sm">$50</button>
+            <button onclick="pagoRapido(100)" class="bg-white border border-slate-300 hover:bg-slate-100 font-bold py-1.5 rounded-lg text-xs text-slate-700 shadow-sm">$100</button>
+            <button onclick="pagoRapido(200)" class="bg-white border border-slate-300 hover:bg-slate-100 font-bold py-1.5 rounded-lg text-xs text-slate-700 shadow-sm">$200</button>
+            <button onclick="pagoRapido(500)" class="bg-white border border-slate-300 hover:bg-slate-100 font-bold py-1.5 rounded-lg text-xs text-slate-700 shadow-sm">$500</button>
+            <button onclick="pagoExacto()" class="bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 font-bold py-1.5 rounded-lg text-xs shadow-sm">Exacto</button>
+          </div>
+
+          <div class="flex justify-between items-center pt-2 border-t border-slate-200">
+            <span class="text-sm font-bold text-slate-600">Cambio:</span>
+            <span class="text-xl font-extrabold text-emerald-600" id="montoCambio">$0.00</span>
+          </div>
+        </div>
+
+        <!-- Bloque Pago Crédito -->
+        <div id="camposCredito" class="hidden space-y-3 bg-amber-50 p-4 rounded-xl border border-amber-200 mb-4">
+          <input type="text" id="clienteNombre" placeholder="Nombre del Cliente" class="w-full border border-amber-300 p-2 rounded-lg text-sm">
+          <input type="tel" id="clienteTel" placeholder="Teléfono" class="w-full border border-amber-300 p-2 rounded-lg text-sm">
+          <label class="block text-xs font-bold text-amber-800">Fecha Límite de Pago:</label>
+          <input type="date" id="fechaLimite" class="w-full border border-amber-300 p-2 rounded-lg text-sm">
         </div>
       </div>
 
@@ -84,7 +110,7 @@
     let carrito = [];
     const barcodeInput = document.getElementById("barcodeInput");
 
-    // Foco automático permanente para el lector de barras
+    // Mantener foco automático en el buscador para el escáner
     document.addEventListener("click", (e) => {
       if (e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT" && e.target.tagName !== "BUTTON") {
         barcodeInput.focus();
@@ -98,9 +124,32 @@
       }
     });
 
-    function toggleCreditoCampos() {
+    function cambiarMetodoPago() {
       const metodo = document.getElementById("metodoPago").value;
+      document.getElementById("bloqueEfectivo").classList.toggle("hidden", metodo !== "Efectivo");
       document.getElementById("camposCredito").classList.toggle("hidden", metodo !== "Credito");
+    }
+
+    function obtenerTotalCarrito() {
+      return carrito.reduce((sum, item) => sum + (item.precio * item.cant), 0);
+    }
+
+    function calcularCambio() {
+      const total = obtenerTotalCarrito();
+      const recibido = parseFloat(document.getElementById("montoRecibido").value) || 0;
+      const cambio = recibido - total;
+      document.getElementById("montoCambio").innerText = `$${(cambio > 0 ? cambio : 0).toFixed(2)}`;
+    }
+
+    function pagoRapido(monto) {
+      document.getElementById("montoRecibido").value = monto;
+      calcularCambio();
+    }
+
+    function pagoExacto() {
+      const total = obtenerTotalCarrito();
+      document.getElementById("montoRecibido").value = total.toFixed(2);
+      calcularCambio();
     }
 
     async function buscarProducto() {
@@ -145,6 +194,7 @@
         `;
       });
       document.getElementById("totalVenta").innerText = `$${total.toFixed(2)}`;
+      calcularCambio();
     }
 
     function eliminarItem(idx) {
@@ -156,13 +206,20 @@
       if (carrito.length === 0) return alert("El carrito está vacío");
 
       const metodo = document.getElementById("metodoPago").value;
-      const total = carrito.reduce((sum, item) => sum + (item.precio * item.cant), 0);
+      const total = obtenerTotalCarrito();
+      const recibido = parseFloat(document.getElementById("montoRecibido").value) || 0;
+
+      if (metodo === "Efectivo" && recibido < total) {
+        return alert("El monto ingresado es menor al total de la venta.");
+      }
 
       const venta = {
         fecha: new Date().toISOString(),
         items: carrito,
         total: total,
         metodoPago: metodo,
+        pagoCon: metodo === "Efectivo" ? recibido : total,
+        cambio: metodo === "Efectivo" ? Math.max(0, recibido - total) : 0,
         estado: metodo === "Credito" ? "Pendiente" : "Pagado"
       };
 
@@ -182,6 +239,7 @@
 
       await db.collection("ventas").add(venta);
 
+      // Descontar inventario en Firestore
       for (let item of carrito) {
         const ref = db.collection("productos").doc(item.id);
         const doc = await ref.get();
@@ -191,8 +249,9 @@
         }
       }
 
-      alert("¡Venta registrada con éxito!");
+      alert(`¡Venta registrada con éxito!\nCambio: $${venta.cambio.toFixed(2)}`);
       carrito = [];
+      document.getElementById("montoRecibido").value = "";
       renderCarrito();
       barcodeInput.focus();
     }
