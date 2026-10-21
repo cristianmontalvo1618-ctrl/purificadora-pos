@@ -9,30 +9,41 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
+  <!-- Header -->
   <header class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center">
-    <h1 class="text-xl font-bold">⚙️ Panel de Administración</h1>
-    <a href="index.html" class="bg-teal-600 hover:bg-teal-700 text-white text-sm py-2 px-4 rounded-lg font-semibold transition">Ir a Caja / POS 🛒</a>
+    <div class="flex items-center gap-2">
+      <span class="text-2xl">⚙️</span>
+      <h1 class="text-xl font-bold">Panel de Administración - Purificadora</h1>
+    </div>
+    <a href="index.html" class="bg-teal-600 hover:bg-teal-700 text-white text-sm py-2 px-4 rounded-lg font-semibold transition shadow">Ir a Caja / POS 🛒</a>
   </header>
 
   <main class="p-6 max-w-7xl mx-auto w-full space-y-8">
-    <!-- Inventario y Registro -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    
+    <!-- Registro y Lista de Productos -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Formulario de Registro -->
       <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <h2 class="font-bold text-lg mb-4 text-slate-700">Registrar Producto</h2>
+        <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+          <span>📦</span> Registrar Producto
+        </h2>
         <form id="formProducto" onsubmit="guardarProducto(event)" class="space-y-3">
-          <input type="text" id="prodCodigo" placeholder="Código de Barras / QR" class="w-full border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none" required>
-          <input type="text" id="prodNombre" placeholder="Nombre del Producto" class="w-full border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none" required>
-          <input type="text" id="prodCategoria" placeholder="Categoría (Ej. Garrafones)" class="w-full border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none" required>
+          <input type="text" id="prodCodigo" placeholder="Código de Barras / QR" class="w-full border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-teal-600 outline-none" required>
+          <input type="text" id="prodNombre" placeholder="Nombre del Producto" class="w-full border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-teal-600 outline-none" required>
+          <input type="text" id="prodCategoria" placeholder="Categoría (Ej. Garrafones, Filtros)" class="w-full border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-teal-600 outline-none" required>
           <div class="grid grid-cols-2 gap-3">
-            <input type="number" step="0.01" id="prodPrecio" placeholder="Precio ($)" class="border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none" required>
-            <input type="number" id="prodStock" placeholder="Stock" class="border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-slate-800 outline-none" required>
+            <input type="number" step="0.01" id="prodPrecio" placeholder="Precio ($)" class="border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-teal-600 outline-none" required>
+            <input type="number" id="prodStock" placeholder="Stock" class="border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-teal-600 outline-none" required>
           </div>
           <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition shadow">Guardar Producto</button>
         </form>
       </section>
 
-      <section class="md:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
-        <h2 class="font-bold text-lg mb-4 text-slate-700">Inventario Registrado</h2>
+      <!-- Tabla de Inventario -->
+      <section class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+        <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+          <span>📋</span> Inventario Registrado
+        </h2>
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="border-b text-xs text-slate-400 uppercase tracking-wider">
@@ -41,6 +52,7 @@
               <th class="p-3">Categoría</th>
               <th class="p-3">Precio</th>
               <th class="p-3">Stock</th>
+              <th class="p-3 text-center">Acción</th>
             </tr>
           </thead>
           <tbody id="tablaInventario"></tbody>
@@ -48,9 +60,11 @@
       </section>
     </div>
 
-    <!-- Cuentas por Cobrar (Crédito) -->
+    <!-- Cuentas por Cobrar (A Plazo) -->
     <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
-      <h2 class="font-bold text-lg mb-4 text-amber-700">⏳ Cuentas por Cobrar / Ventas a Plazo</h2>
+      <h2 class="font-bold text-lg mb-4 text-amber-700 flex items-center gap-2">
+        <span>⏳</span> Cuentas por Cobrar / Ventas a Plazo
+      </h2>
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="border-b text-xs text-slate-400 uppercase tracking-wider">
@@ -66,14 +80,23 @@
       </table>
     </section>
 
-    <!-- Historial de Ventas y Excel -->
+    <!-- Historial de Ventas y Corte de Caja -->
     <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="font-bold text-lg text-emerald-800">📊 Historial de Ventas</h2>
-        <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-4 py-2 rounded-xl transition shadow">
-          📥 Exportar a Excel (CSV)
-        </button>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 class="font-bold text-lg text-emerald-800 flex items-center gap-2">
+          <span>📊</span> Historial de Ventas & Corte de Caja
+        </h2>
+        
+        <div class="flex flex-wrap gap-2">
+          <button onclick="realizarCorteCaja()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition shadow flex items-center gap-2">
+            <span>✂️</span> Realizar Corte de Caja & Exportar
+          </button>
+          <button onclick="exportarExcelCompleto()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition shadow flex items-center gap-2">
+            <span>📥</span> Exportar Todo a Excel
+          </button>
+        </div>
       </div>
+
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="border-b text-xs text-slate-400 uppercase tracking-wider">
@@ -81,6 +104,7 @@
             <th class="p-3">Método</th>
             <th class="p-3">Total</th>
             <th class="p-3">Estado</th>
+            <th class="p-3">Cliente</th>
           </tr>
         </thead>
         <tbody id="tablaVentas"></tbody>
@@ -103,6 +127,7 @@
 
     let ventasGlobales = [];
 
+    // Cargar Inventario en tiempo real con botón de Eliminar
     db.collection("productos").onSnapshot(snap => {
       const tbody = document.getElementById("tablaInventario");
       tbody.innerHTML = "";
@@ -110,16 +135,22 @@
         const p = doc.data();
         tbody.innerHTML += `
           <tr class="border-b border-slate-100 hover:bg-slate-50">
-            <td class="p-3 text-sm">${p.codigo}</td>
+            <td class="p-3 text-sm font-mono">${p.codigo}</td>
             <td class="p-3 font-semibold text-slate-700">${p.nombre}</td>
             <td class="p-3 text-slate-500">${p.categoria}</td>
-            <td class="p-3 text-slate-700">$${parseFloat(p.precio).toFixed(2)}</td>
+            <td class="p-3 text-slate-700 font-bold">$${parseFloat(p.precio).toFixed(2)}</td>
             <td class="p-3 font-bold ${p.stock < 5 ? 'text-rose-600' : 'text-emerald-600'}">${p.stock}</td>
+            <td class="p-3 text-center">
+              <button onclick="eliminarProducto('${doc.id}', '${p.nombre}')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-lg transition">
+                🗑️ Eliminar
+              </button>
+            </td>
           </tr>
         `;
       });
     });
 
+    // Cargar Ventas a Crédito
     db.collection("ventas").where("metodoPago", "==", "Credito").onSnapshot(snap => {
       const tbody = document.getElementById("tablaCreditos");
       tbody.innerHTML = "";
@@ -140,6 +171,7 @@
       });
     });
 
+    // Cargar Historial de Ventas
     db.collection("ventas").onSnapshot(snap => {
       const tbody = document.getElementById("tablaVentas");
       tbody.innerHTML = "";
@@ -150,9 +182,10 @@
         tbody.innerHTML += `
           <tr class="border-b border-slate-100 hover:bg-slate-50">
             <td class="p-3 text-sm text-slate-600">${new Date(v.fecha).toLocaleString()}</td>
-            <td class="p-3 text-sm">${v.metodoPago}</td>
+            <td class="p-3 text-sm font-medium">${v.metodoPago}</td>
             <td class="p-3 font-bold text-slate-800">$${parseFloat(v.total).toFixed(2)}</td>
             <td class="p-3 text-sm">${v.estado}</td>
+            <td class="p-3 text-sm text-slate-500">${v.cliente || '---'}</td>
           </tr>
         `;
       });
@@ -173,23 +206,70 @@
       alert("¡Producto registrado correctamente!");
     }
 
+    async function eliminarProducto(id, nombre) {
+      if (confirm(`¿Estás seguro de que deseas eliminar el producto "${nombre}"?`)) {
+        await db.collection("productos").doc(id).delete();
+        alert("Producto eliminado del inventario.");
+      }
+    }
+
     async function marcarPagado(id) {
       await db.collection("ventas").doc(id).update({ estado: "Pagado" });
       alert("Crédito marcado como pagado.");
     }
 
-    function exportarExcel() {
-      if (ventasGlobales.length === 0) return alert("No hay ventas para exportar.");
+    // Corte de Caja Diario
+    function realizarCorteCaja() {
+      const hoy = new Date().toDateString();
+      const ventasHoy = ventasGlobales.filter(v => new Date(v.fecha).toDateString() === hoy);
 
-      let csv = "Fecha,Metodo_Pago,Total,Estado,Cliente,Telefono\n";
-      ventasGlobales.forEach(v => {
+      if (ventasHoy.length === 0) {
+        return alert("No hay ventas registradas el día de hoy para realizar el corte de caja.");
+      }
+
+      let totalEfectivo = 0;
+      let totalTransferencia = 0;
+      let totalCredito = 0;
+
+      ventasHoy.forEach(v => {
+        if (v.metodoPago === "Efectivo") totalEfectivo += parseFloat(v.total);
+        if (v.metodoPago === "Transferencia") totalTransferencia += parseFloat(v.total);
+        if (v.metodoPago === "Credito") totalCredito += parseFloat(v.total);
+      });
+
+      const totalCaja = totalEfectivo + totalTransferencia;
+
+      const resumenMsg = `
+=== RESUMEN CORTE DE CAJA (${new Date().toLocaleDateString()}) ===
+
+💵 Efectivo en Caja: $${totalEfectivo.toFixed(2)}
+🏛️ Transferencias: $${totalTransferencia.toFixed(2)}
+⏳ Ventas a Plazo / Crédito: $${totalCredito.toFixed(2)}
+
+💰 TOTAL INGRESADO HOY: $${totalCaja.toFixed(2)}
+      `;
+
+      alert(resumenMsg);
+
+      // Exportar archivo Excel del Corte de Hoy
+      generarCSV(ventasHoy, `Corte_Caja_${new Date().toISOString().slice(0,10)}.csv`);
+    }
+
+    function exportarExcelCompleto() {
+      if (ventasGlobales.length === 0) return alert("No hay ventas para exportar.");
+      generarCSV(ventasGlobales, `Historial_Completo_Ventas_${new Date().toISOString().slice(0,10)}.csv`);
+    }
+
+    function generarCSV(lista, nombreArchivo) {
+      let csv = "Fecha_Hora,Metodo_Pago,Total,Estado,Cliente,Telefono\n";
+      lista.forEach(v => {
         csv += `"${new Date(v.fecha).toLocaleString()}","${v.metodoPago}","${v.total}","${v.estado}","${v.cliente || ''}","${v.telefono || ''}"\n`;
       });
 
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `Reporte_Ventas_Purificadora_${new Date().toISOString().slice(0,10)}.csv`;
+      link.download = nombreArchivo;
       link.click();
     }
   </script>
