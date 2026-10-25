@@ -7,6 +7,14 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <style>
+    @media print {
+      body * { visibility: hidden !important; }
+      #ticketImprimible, #ticketImprimible * { visibility: visible !important; }
+      #ticketImprimible { position: absolute; left: 0; top: 0; width: 100%; font-size: 12px; font-family: monospace; }
+      .no-print { display: none !important; }
+    }
+  </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
 
@@ -81,8 +89,8 @@
 
           <!-- Pago A Plazo -->
           <div id="despliegueCredito" class="hidden bg-amber-50 p-3.5 rounded-xl border border-amber-200 space-y-2.5">
-            <input type="text" id="clienteNombre" placeholder="Nombre del Cliente" class="w-full border border-amber-300 p-2 rounded-lg text-xs">
-            <input type="tel" id="clienteTel" placeholder="Teléfono" class="w-full border border-amber-300 p-2 rounded-lg text-xs">
+            <input type="text" id="clienteNombre" placeholder="Nombre del Cliente *" class="w-full border border-amber-300 p-2 rounded-lg text-xs">
+            <input type="tel" id="clienteTel" placeholder="Teléfono (10 dígitos para WhatsApp)" class="w-full border border-amber-300 p-2 rounded-lg text-xs">
             <div class="flex items-center gap-2">
               <span class="text-[11px] font-bold text-amber-800 w-28">Fecha Límite:</span>
               <input type="date" id="fechaLimite" class="flex-1 border border-amber-300 p-1.5 rounded-lg text-xs">
@@ -98,7 +106,7 @@
 
   </main>
 
-  <!-- MODAL DE COBRO EN EFECTIVO (CENTRAL) -->
+  <!-- MODAL DE COBRO EN EFECTIVO -->
   <div id="modalEfectivo" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-100">
       <div class="flex justify-between items-center border-b pb-3">
@@ -118,7 +126,6 @@
         <input type="number" id="montoRecibidoModal" oninput="calcularCambioModal()" placeholder="0.00" class="w-full border border-slate-300 p-3 rounded-xl text-xl font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600">
       </div>
 
-      <!-- Billetes Rápidos -->
       <div class="grid grid-cols-4 gap-2 text-xs">
         <button onclick="pagoRapidoModal(20)" class="bg-slate-50 border hover:bg-slate-100 py-2.5 rounded-xl font-bold text-slate-700 shadow-sm">$20</button>
         <button onclick="pagoRapidoModal(50)" class="bg-slate-50 border hover:bg-slate-100 py-2.5 rounded-xl font-bold text-slate-700 shadow-sm">$50</button>
@@ -140,7 +147,42 @@
     </div>
   </div>
 
-  <!-- MODAL DE ALERTAS PERSONALIZADO (BONITO Y CENTRADO) -->
+  <!-- MODAL DE TICKET / RECIBO EXitoso -->
+  <div id="modalTicket" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100 text-center">
+      <div class="text-4xl">🎉</div>
+      <h3 class="font-bold text-lg text-slate-800">¡Venta Exitosa!</h3>
+      
+      <!-- Contenedor del Ticket Imprimible / PDF -->
+      <div id="ticketImprimible" class="bg-slate-50 p-4 rounded-2xl text-left font-mono text-xs text-slate-700 space-y-1.5 border border-slate-200">
+        <div class="text-center font-bold text-sm text-[#00838f]">Purificadora POS</div>
+        <div class="text-center text-[10px] text-slate-500">Comprobante de Venta</div>
+        <div id="ticketDetalleFecha" class="text-center text-[10px] text-slate-400"></div>
+        <div class="border-t border-dashed border-slate-300 my-2"></div>
+        <div id="ticketDetalleItems" class="space-y-1"></div>
+        <div class="border-t border-dashed border-slate-300 my-2"></div>
+        <div class="flex justify-between font-bold text-sm"><span>TOTAL:</span><span id="ticketDetalleTotal"></span></div>
+        <div class="flex justify-between text-[11px]"><span>Método de Pago:</span><span id="ticketDetalleMetodo"></span></div>
+        <div id="ticketExtraEfectivo" class="space-y-1 text-[11px]"></div>
+      </div>
+
+      <!-- Opciones de Compartir (PDF y WhatsApp) -->
+      <div class="space-y-2 pt-2">
+        <button onclick="descargarPDF()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl text-xs transition shadow flex items-center justify-center gap-2">
+          <span>📥</span> Descargar Recibo en PDF
+        </button>
+        <button onclick="enviarWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs transition shadow flex items-center justify-center gap-2">
+          <span>💬</span> Enviar por WhatsApp al Cliente
+        </button>
+      </div>
+
+      <button onclick="cerrarModalTicket()" class="w-full bg-teal-100 hover:bg-teal-200 text-teal-800 font-bold py-2.5 rounded-xl text-xs transition">
+        Nueva Venta
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL DE ALERTAS GENERALES -->
   <div id="modalAlerta" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
       <div id="alertaIcono" class="text-4xl">⚠️</div>
@@ -166,6 +208,7 @@
     let productosCatalogo = [];
     let carrito = [];
     let metodoSeleccionado = "Efectivo";
+    let ultimaVentaDatos = null;
 
     const barcodeInput = document.getElementById("barcodeInput");
 
@@ -345,7 +388,6 @@
       return carrito.reduce((s, i) => s + (i.precio * i.cant), 0);
     }
 
-    // Funciones del Modal de Efectivo
     function preProcesarVenta() {
       if (carrito.length === 0) {
         mostrarAlerta("Añade al menos un producto a la orden antes de cobrar.", "Orden Vacía", "🛒");
@@ -404,7 +446,7 @@
     async function ejecutarProcesarVenta(total, recibido, cambio) {
       const venta = {
         fecha: new Date().toISOString(),
-        items: carrito,
+        items: [...carrito],
         total: total,
         metodoPago: metodoSeleccionado,
         pagoCon: recibido,
@@ -438,9 +480,65 @@
         }
       }
 
-      mostrarAlerta(`¡Venta procesada con éxito!\nCambio a entregar: $${cambio.toFixed(2)}`, "¡Venta Exitosa!", "🎉");
+      ultimaVentaDatos = venta;
+      prepararTicketModal(venta);
+
       carrito = [];
       renderizarCarrito();
+    }
+
+    function prepararTicketModal(v) {
+      document.getElementById("ticketDetalleFecha").innerText = new Date(v.fecha).toLocaleString();
+      
+      let itemsHtml = "";
+      v.items.forEach(i => {
+        itemsHtml += `<div class="flex justify-between"><span>${i.cant}x ${i.nombre}</span><span>$${(i.precio * i.cant).toFixed(2)}</span></div>`;
+      });
+      document.getElementById("ticketDetalleItems").innerHTML = itemsHtml;
+      document.getElementById("ticketDetalleTotal").innerText = `$${v.total.toFixed(2)}`;
+      document.getElementById("ticketDetalleMetodo").innerText = v.metodoPago;
+
+      let extraHtml = "";
+      if (v.metodoPago === "Efectivo") {
+        extraHtml = `<div class="flex justify-between"><span>Recibido:</span><span>$${v.pagoCon.toFixed(2)}</span></div>
+                     <div class="flex justify-between"><span>Cambio:</span><span>$${v.cambio.toFixed(2)}</span></div>`;
+      } else if (v.metodoPago === "Credito") {
+        extraHtml = `<div>Cliente: ${v.cliente}</div><div>Límite: ${v.fechaLimite}</div>`;
+      }
+      document.getElementById("ticketExtraEfectivo").innerHTML = extraHtml;
+
+      document.getElementById("modalTicket").classList.remove("hidden");
+    }
+
+    function descargarPDF() {
+      window.print();
+    }
+
+    function enviarWhatsApp() {
+      if (!ultimaVentaDatos) return;
+      const v = ultimaVentaDatos;
+      let tel = v.telefono || prompt("Ingresa el número de WhatsApp del cliente (10 dígitos con código de país, ej: 521...):");
+      if (!tel) return;
+
+      let texto = `*Purificadora POS - Comprobante de Venta*%0A`;
+      texto += `Fecha: ${new Date(v.fecha).toLocaleString()}%0A`;
+      texto += `--------------------------------%0A`;
+      v.items.forEach(i => {
+        texto += `${i.cant}x ${i.nombre} - $${(i.precio * i.cant).toFixed(2)}%0A`;
+      });
+      texto += `--------------------------------%0A`;
+      texto += `*TOTAL: $${v.total.toFixed(2)}*%0A`;
+      texto += `Método: ${v.metodoPago}%0A`;
+      if (v.metodoPago === "Efectivo") {
+        texto += `Cambio entregado: $${v.cambio.toFixed(2)}%0A`;
+      }
+      texto += `%0A¡Gracias por su preferencia! 💧`;
+
+      window.open(`https://wa.me/${tel.replace(/\D/g, '')}?text=${texto}`, '_blank');
+    }
+
+    function cerrarModalTicket() {
+      document.getElementById("modalTicket").classList.add("hidden");
       focarScanner();
     }
   </script>
