@@ -9,20 +9,39 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
-  <!-- Header -->
+
+  <!-- PANTALLA DE LOGIN (INICIO DE SESIÓN) -->
+  <div id="modalLogin" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl space-y-6 text-center border border-slate-100">
+      <div class="bg-teal-50 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl">🔐</div>
+      <div>
+        <h2 class="font-bold text-xl text-slate-800">Panel Protegido</h2>
+        <p class="text-xs text-slate-400 mt-1">Ingresa la contraseña de administrador</p>
+      </div>
+      <form onsubmit="verificarPassword(event)" class="space-y-4">
+        <input type="password" id="adminPassInput" placeholder="Contraseña..." class="w-full border border-slate-300 p-3.5 rounded-xl text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-teal-600" required autofocus>
+        <button type="submit" class="w-full bg-[#00838f] hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl transition shadow">Entrar al Panel</button>
+      </form>
+      <a href="index.html" class="block text-xs font-semibold text-slate-400 hover:text-slate-600">← Volver a la Caja / POS</a>
+    </div>
+  </div>
+
+  <!-- HEADER -->
   <header class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center">
     <div class="flex items-center gap-2">
       <span class="text-2xl">⚙️</span>
       <h1 class="text-xl font-bold">Panel de Administración - Purificadora</h1>
     </div>
-    <a href="index.html" class="bg-teal-600 hover:bg-teal-700 text-white text-sm py-2 px-4 rounded-lg font-semibold transition shadow">Ir a Caja / POS 🛒</a>
+    <div class="flex items-center gap-3">
+      <button onclick="reiniciarBaseDeDatos()" class="bg-rose-900/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold py-2 px-3 rounded-lg transition border border-rose-800">🗑️ Limpiar Pruebas</button>
+      <a href="index.html" class="bg-teal-600 hover:bg-teal-700 text-white text-sm py-2 px-4 rounded-lg font-semibold transition shadow">Ir a Caja / POS 🛒</a>
+    </div>
   </header>
 
   <main class="p-6 max-w-7xl mx-auto w-full space-y-8">
     
     <!-- Registro y Lista de Productos -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Formulario de Registro -->
       <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
           <span>📦</span> Registrar Producto
@@ -39,7 +58,6 @@
         </form>
       </section>
 
-      <!-- Tabla de Inventario -->
       <section class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
         <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
           <span>📋</span> Inventario Registrado
@@ -89,7 +107,7 @@
         
         <div class="flex flex-wrap gap-2">
           <button onclick="realizarCorteCaja()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition shadow flex items-center gap-2">
-            <span>✂️</span> Realizar Corte de Caja & Exportar
+            <span>✂️</span> Realizar corte de caja por día & Exportar base de datos
           </button>
           <button onclick="exportarExcelCompleto()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition shadow flex items-center gap-2">
             <span>📥</span> Exportar Todo a Excel
@@ -112,6 +130,16 @@
     </section>
   </main>
 
+  <!-- MODAL DE ALERTAS PERSONALIZADO (COMO EN EL INDEX) -->
+  <div id="modalAlerta" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
+      <div id="alertaIcono" class="text-4xl">⚠️</div>
+      <h3 id="alertaTitulo" class="font-bold text-lg text-slate-800">Atención</h3>
+      <p id="alertaMensaje" class="text-sm text-slate-600"></p>
+      <button onclick="cerrarAlerta()" class="w-full bg-[#00838f] hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition shadow">Aceptar</button>
+    </div>
+  </div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCrkP1I6pplC-Qk02QhPxSiXK-0ZkEwEkQ",
@@ -127,7 +155,32 @@
 
     let ventasGlobales = [];
 
-    // Cargar Inventario en tiempo real con botón de Eliminar
+    // Contraseña de Administrador (Puedes cambiarla aquí cuando gustes)
+    const ADMIN_PASSWORD = "admin123"; 
+
+    function verificarPassword(e) {
+      e.preventDefault();
+      const pass = document.getElementById("adminPassInput").value;
+      if (pass === ADMIN_PASSWORD) {
+        document.getElementById("modalLogin").classList.add("hidden");
+      } else {
+        mostrarAlerta("Contraseña incorrecta. Intenta de nuevo.", "Acceso Denegado", "❌");
+        document.getElementById("adminPassInput").value = "";
+      }
+    }
+
+    function mostrarAlerta(mensaje, titulo = "Aviso importante", icono = "⚠️") {
+      document.getElementById("alertaTitulo").innerText = titulo;
+      document.getElementById("alertaMensaje").innerText = mensaje;
+      document.getElementById("alertaIcono").innerText = icono;
+      document.getElementById("modalAlerta").classList.remove("hidden");
+    }
+
+    function cerrarAlerta() {
+      document.getElementById("modalAlerta").classList.add("hidden");
+    }
+
+    // Cargar Inventario
     db.collection("productos").onSnapshot(snap => {
       const tbody = document.getElementById("tablaInventario");
       tbody.innerHTML = "";
@@ -150,7 +203,7 @@
       });
     });
 
-    // Cargar Ventas a Crédito
+    // Cargar Créditos
     db.collection("ventas").where("metodoPago", "==", "Credito").onSnapshot(snap => {
       const tbody = document.getElementById("tablaCreditos");
       tbody.innerHTML = "";
@@ -203,28 +256,28 @@
 
       await db.collection("productos").add(p);
       document.getElementById("formProducto").reset();
-      alert("¡Producto registrado correctamente!");
+      mostrarAlerta("El producto se registró correctamente en el sistema.", "¡Producto Guardado!", "✅");
     }
 
     async function eliminarProducto(id, nombre) {
       if (confirm(`¿Estás seguro de que deseas eliminar el producto "${nombre}"?`)) {
         await db.collection("productos").doc(id).delete();
-        alert("Producto eliminado del inventario.");
+        mostrarAlerta(`Se eliminó "${nombre}" del inventario.`, "Producto Eliminado", "🗑️");
       }
     }
 
     async function marcarPagado(id) {
       await db.collection("ventas").doc(id).update({ estado: "Pagado" });
-      alert("Crédito marcado como pagado.");
+      mostrarAlerta("El crédito fue registrado como pagado exitosamente.", "Crédito Actualizado", "💰");
     }
 
-    // Corte de Caja Diario
     function realizarCorteCaja() {
       const hoy = new Date().toDateString();
       const ventasHoy = ventasGlobales.filter(v => new Date(v.fecha).toDateString() === hoy);
 
       if (ventasHoy.length === 0) {
-        return alert("No hay ventas registradas el día de hoy para realizar el corte de caja.");
+        mostrarAlerta("No hay ventas registradas el día de hoy para realizar el corte de caja.", "Sin Ventas Hoy", "📊");
+        return;
       }
 
       let totalEfectivo = 0;
@@ -239,25 +292,18 @@
 
       const totalCaja = totalEfectivo + totalTransferencia;
 
-      const resumenMsg = `
-=== RESUMEN CORTE DE CAJA (${new Date().toLocaleDateString()}) ===
+      const resumenMsg = `Efectivo en Caja: $${totalEfectivo.toFixed(2)} | Transferencias: $${totalTransferencia.toFixed(2)} | Total del Día: $${totalCaja.toFixed(2)}`;
+      mostrarAlerta(resumenMsg, `Corte de Caja (${new Date().toLocaleDateString()})`, "✂️");
 
-💵 Efectivo en Caja: $${totalEfectivo.toFixed(2)}
-🏛️ Transferencias: $${totalTransferencia.toFixed(2)}
-⏳ Ventas a Plazo / Crédito: $${totalCredito.toFixed(2)}
-
-💰 TOTAL INGRESADO HOY: $${totalCaja.toFixed(2)}
-      `;
-
-      alert(resumenMsg);
-
-      // Exportar archivo Excel del Corte de Hoy
       generarCSV(ventasHoy, `Corte_Caja_${new Date().toISOString().slice(0,10)}.csv`);
     }
 
     function exportarExcelCompleto() {
-      if (ventasGlobales.length === 0) return alert("No hay ventas para exportar.");
-      generarCSV(ventasGlobales, `Historial_Completo_Ventas_${new Date().toISOString().slice(0,10)}.csv`);
+      if (ventasGlobales.length === 0) {
+        mostrarAlerta("No hay ventas registradas en el historial para exportar.", "Historial Vacío", "📂");
+        return;
+      }
+      generarCSV(ventasGlobales, `Historial_BaseDeDatos_Ventas_${new Date().toISOString().slice(0,10)}.csv`);
     }
 
     function generarCSV(lista, nombreArchivo) {
@@ -271,6 +317,19 @@
       link.href = URL.createObjectURL(blob);
       link.download = nombreArchivo;
       link.click();
+    }
+
+    // FUNCIÓN PARA LIMPIAR TODAS LAS PRUEBAS DE LA BASE DE DATOS
+    async function reiniciarBaseDeDatos() {
+      if (confirm("⚠️ ¿Estás completamente seguro de borrar TODO el historial de ventas y dejar el sistema limpio para entrega?\n\n(Esto no borra tus productos del inventario, solo las ventas de prueba).")) {
+        const snap = await db.collection("ventas").get();
+        const batch = db.batch();
+        snap.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        mostrarAlerta("El historial de ventas de prueba se ha limpiado por completo. El sistema está listo para el cliente.", "¡Sistema Limpio!", "✨");
+      }
     }
   </script>
 </body>
