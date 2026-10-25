@@ -10,7 +10,7 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
 
-  <!-- Header Turquesa Original -->
+  <!-- Header Turquesa -->
   <header class="bg-[#00838f] text-white px-6 py-3 shadow-md flex justify-between items-center">
     <div class="flex items-center gap-3">
       <div class="bg-teal-100/30 p-2 rounded-full">
@@ -32,27 +32,21 @@
   <!-- Layout Principal -->
   <main class="p-6 flex-1 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-    <!-- Columna Izquierda: Buscador + Catálogo de Productos en Tarjetas -->
+    <!-- Izquierda: Buscador + Catálogo en Tarjetas -->
     <section class="lg:col-span-2 flex flex-col gap-6">
-      
-      <!-- Buscador principal -->
       <div class="relative">
-        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-          🔍
-        </span>
+        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">🔍</span>
         <input type="text" id="barcodeInput" oninput="filtrarProductos()" placeholder="Buscar filtro, resina, garrafón, membrana o código..." class="w-full bg-white border-0 shadow-sm rounded-xl py-3.5 pl-11 pr-4 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm" autofocus>
       </div>
 
-      <!-- Tarjetero / Cuadrícula de Productos -->
       <div id="gridProductos" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <div class="col-span-full text-center text-slate-400 py-10">Cargando catálogo...</div>
       </div>
     </section>
 
-    <!-- Columna Derecha: Orden Actual -->
+    <!-- Derecha: Orden Actual y Cobro -->
     <section class="bg-white rounded-2xl shadow-sm p-6 flex flex-col justify-between border border-slate-100">
       <div>
-        <!-- Encabezado Carrito -->
         <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
           <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
             <span class="text-teal-600">🛒</span> Orden Actual
@@ -60,23 +54,19 @@
           <button onclick="vaciarCarrito()" class="text-rose-400 hover:text-rose-600 text-xs font-semibold">Vaciar</button>
         </div>
 
-        <!-- Lista de Productos en la Orden -->
         <div id="carritoContenedor" class="min-h-[180px] max-h-[320px] overflow-y-auto pr-1 space-y-3 mb-6">
           <p id="carritoVacioMsg" class="text-slate-300 text-center py-16 text-sm font-medium">Aún no hay productos añadidos</p>
           <div id="carritoItems" class="space-y-3"></div>
         </div>
 
-        <!-- Total a pagar -->
         <div class="flex justify-between items-center border-t border-slate-100 pt-4 mb-6">
           <span class="text-slate-500 font-semibold text-sm">Total a pagar:</span>
           <span class="text-2xl font-black text-[#00838f]" id="totalVenta">$0.00</span>
         </div>
 
-        <!-- PAGO Y MÉTODOS -->
         <div class="space-y-4">
           <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">SELECCIONE MÉTODO DE PAGO:</span>
 
-          <!-- Botones de Método de Pago Originales -->
           <div class="grid grid-cols-3 gap-2">
             <button id="btnEfectivo" onclick="seleccionarMetodo('Efectivo')" class="flex flex-col items-center justify-center py-3 px-2 rounded-xl text-white font-bold text-xs bg-[#00897b] shadow-md transition transform active:scale-95">
               <span class="text-base mb-1">💵</span> Efectivo
@@ -89,25 +79,7 @@
             </button>
           </div>
 
-          <!-- Despliegue Pago en Efectivo (Billetes + Cambio) -->
-          <div id="despliegueEfectivo" class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-slate-500 w-24">Paga con ($):</span>
-              <input type="number" id="montoRecibido" oninput="calcularCambio()" placeholder="0.00" class="flex-1 border border-slate-300 p-2 rounded-lg text-sm font-bold text-slate-800 focus:outline-teal-600">
-            </div>
-            <div class="grid grid-cols-4 gap-1.5 text-xs">
-              <button onclick="pagoRapido(20)" class="bg-white border hover:bg-slate-100 py-1 rounded font-bold text-slate-700 shadow-sm">$20</button>
-              <button onclick="pagoRapido(50)" class="bg-white border hover:bg-slate-100 py-1 rounded font-bold text-slate-700 shadow-sm">$50</button>
-              <button onclick="pagoRapido(100)" class="bg-white border hover:bg-slate-100 py-1 rounded font-bold text-slate-700 shadow-sm">$100</button>
-              <button onclick="pagoRapido(200)" class="bg-white border hover:bg-slate-100 py-1 rounded font-bold text-slate-700 shadow-sm">$200</button>
-            </div>
-            <div class="flex justify-between items-center pt-1 border-t border-slate-200 text-xs">
-              <span class="font-bold text-slate-600">Cambio a entregar:</span>
-              <span class="font-black text-emerald-600 text-base" id="montoCambio">$0.00</span>
-            </div>
-          </div>
-
-          <!-- Despliegue Pago A Plazo / Crédito -->
+          <!-- Pago A Plazo -->
           <div id="despliegueCredito" class="hidden bg-amber-50 p-3.5 rounded-xl border border-amber-200 space-y-2.5">
             <input type="text" id="clienteNombre" placeholder="Nombre del Cliente" class="w-full border border-amber-300 p-2 rounded-lg text-xs">
             <input type="tel" id="clienteTel" placeholder="Teléfono" class="w-full border border-amber-300 p-2 rounded-lg text-xs">
@@ -119,13 +91,64 @@
         </div>
       </div>
 
-      <!-- Botón de Cobrar -->
-      <button onclick="procesarVenta()" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl text-base shadow-md transition transform active:scale-95">
+      <button onclick="preProcesarVenta()" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl text-base shadow-md transition transform active:scale-95">
         ✅ Procesar Venta
       </button>
     </section>
 
   </main>
+
+  <!-- MODAL DE COBRO EN EFECTIVO (CENTRAL) -->
+  <div id="modalEfectivo" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-100">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+          <span>💵</span> Cobro en Efectivo
+        </h3>
+        <button onclick="cerrarModalEfectivo()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+      </div>
+
+      <div class="bg-teal-50 p-4 rounded-2xl flex justify-between items-center border border-teal-100">
+        <span class="text-sm font-bold text-teal-900">Total a Pagar:</span>
+        <span class="text-2xl font-black text-teal-700" id="modalTotalVenta">$0.00</span>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-500">¿Con cuánto paga el cliente ($)?</label>
+        <input type="number" id="montoRecibidoModal" oninput="calcularCambioModal()" placeholder="0.00" class="w-full border border-slate-300 p-3 rounded-xl text-xl font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600">
+      </div>
+
+      <!-- Billetes Rápidos -->
+      <div class="grid grid-cols-4 gap-2 text-xs">
+        <button onclick="pagoRapidoModal(20)" class="bg-slate-50 border hover:bg-slate-100 py-2.5 rounded-xl font-bold text-slate-700 shadow-sm">$20</button>
+        <button onclick="pagoRapidoModal(50)" class="bg-slate-50 border hover:bg-slate-100 py-2.5 rounded-xl font-bold text-slate-700 shadow-sm">$50</button>
+        <button onclick="pagoRapidoModal(100)" class="bg-slate-50 border hover:bg-slate-100 py-2.5 rounded-xl font-bold text-slate-700 shadow-sm">$100</button>
+        <button onclick="pagoRapidoModal(200)" class="bg-slate-50 border hover:bg-slate-100 py-2.5 rounded-xl font-bold text-slate-700 shadow-sm">$200</button>
+        <button onclick="pagoRapidoModal(500)" class="bg-slate-50 border hover:bg-slate-100 py-2.5 rounded-xl font-bold text-slate-700 shadow-sm">$500</button>
+        <button onclick="pagoExactoModal()" class="col-span-3 bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 py-2.5 rounded-xl font-bold shadow-sm">Monto Exacto</button>
+      </div>
+
+      <div class="bg-slate-50 p-4 rounded-2xl flex justify-between items-center border border-slate-200">
+        <span class="text-sm font-bold text-slate-600">Cambio a Entregar:</span>
+        <span class="text-2xl font-black text-emerald-600" id="montoCambioModal">$0.00</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 pt-2">
+        <button onclick="cerrarModalEfectivo()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl transition">Cancelar</button>
+        <button onclick="confirmarVentaEfectivo()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition shadow">Confirmar Venta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE ALERTAS PERSONALIZADO (BONITO Y CENTRADO) -->
+  <div id="modalAlerta" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
+      <div id="alertaIcono" class="text-4xl">⚠️</div>
+      <h3 id="alertaTitulo" class="font-bold text-lg text-slate-800">Atención</h3>
+      <p id="alertaMensaje" class="text-sm text-slate-600"></p>
+      <button onclick="cerrarAlerta()" class="w-full bg-[#00838f] hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition shadow">Aceptar</button>
+    </div>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -146,13 +169,23 @@
 
     const barcodeInput = document.getElementById("barcodeInput");
 
-    // Mantener Foco Automático para el Escáner sin clics
+    function mostrarAlerta(mensaje, titulo = "Aviso importante", icono = "⚠️") {
+      document.getElementById("alertaTitulo").innerText = titulo;
+      document.getElementById("alertaMensaje").innerText = mensaje;
+      document.getElementById("alertaIcono").innerText = icono;
+      document.getElementById("modalAlerta").classList.remove("hidden");
+    }
+
+    function cerrarAlerta() {
+      document.getElementById("modalAlerta").classList.add("hidden");
+    }
+
     function focarScanner() {
       barcodeInput.focus();
     }
 
     document.addEventListener("click", (e) => {
-      if (e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT" && e.target.tagName !== "BUTTON") {
+      if (e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT" && e.target.tagName !== "BUTTON" && !e.target.closest('.fixed')) {
         focarScanner();
       }
     });
@@ -164,7 +197,6 @@
       }
     });
 
-    // Cargar Catálogo desde Firestore y renderizarlo en tarjetas
     db.collection("productos").onSnapshot(snap => {
       productosCatalogo = [];
       snap.forEach(doc => {
@@ -231,7 +263,7 @@
       if (prod) {
         agregarAlCarrito(prod.id);
       } else {
-        alert("Producto no encontrado en el catálogo.");
+        mostrarAlerta("El código escaneado no coincide con ningún producto registrado.", "Producto no encontrado", "🔍");
       }
       barcodeInput.value = "";
       filtrarProductos();
@@ -283,7 +315,6 @@
       });
 
       document.getElementById("totalVenta").innerText = `$${total.toFixed(2)}`;
-      calcularCambio();
     }
 
     function eliminarItem(idx) {
@@ -307,7 +338,6 @@
       btnT.classList.toggle("opacity-60", metodo !== 'Transferencia');
       btnC.classList.toggle("opacity-60", metodo !== 'Credito');
 
-      document.getElementById("despliegueEfectivo").classList.toggle("hidden", metodo !== 'Efectivo');
       document.getElementById("despliegueCredito").classList.toggle("hidden", metodo !== 'Credito');
     }
 
@@ -315,35 +345,70 @@
       return carrito.reduce((s, i) => s + (i.precio * i.cant), 0);
     }
 
-    function calcularCambio() {
-      const total = obtenerTotal();
-      const recibido = parseFloat(document.getElementById("montoRecibido").value) || 0;
-      const cambio = recibido - total;
-      document.getElementById("montoCambio").innerText = `$${(cambio > 0 ? cambio : 0).toFixed(2)}`;
-    }
-
-    function pagoRapido(monto) {
-      document.getElementById("montoRecibido").value = monto;
-      calcularCambio();
-    }
-
-    async function procesarVenta() {
-      if (carrito.length === 0) return alert("Añade al menos un producto a la orden.");
-
-      const total = obtenerTotal();
-      const recibido = parseFloat(document.getElementById("montoRecibido").value) || 0;
-
-      if (metodoSeleccionado === "Efectivo" && recibido < total) {
-        return alert("El dinero recibido es menor al total a pagar.");
+    // Funciones del Modal de Efectivo
+    function preProcesarVenta() {
+      if (carrito.length === 0) {
+        mostrarAlerta("Añade al menos un producto a la orden antes de cobrar.", "Orden Vacía", "🛒");
+        return;
       }
 
+      if (metodoSeleccionado === "Efectivo") {
+        const total = obtenerTotal();
+        document.getElementById("modalTotalVenta").innerText = `$${total.toFixed(2)}`;
+        document.getElementById("montoRecibidoModal").value = "";
+        document.getElementById("montoCambioModal").innerText = "$0.00";
+        document.getElementById("modalEfectivo").classList.remove("hidden");
+        setTimeout(() => document.getElementById("montoRecibidoModal").focus(), 100);
+      } else {
+        ejecutarProcesarVenta(obtenerTotal(), obtenerTotal(), 0);
+      }
+    }
+
+    function cerrarModalEfectivo() {
+      document.getElementById("modalEfectivo").classList.add("hidden");
+      focarScanner();
+    }
+
+    function calcularCambioModal() {
+      const total = obtenerTotal();
+      const recibido = parseFloat(document.getElementById("montoRecibidoModal").value) || 0;
+      const cambio = recibido - total;
+      document.getElementById("montoCambioModal").innerText = `$${(cambio > 0 ? cambio : 0).toFixed(2)}`;
+    }
+
+    function pagoRapidoModal(monto) {
+      document.getElementById("montoRecibidoModal").value = monto;
+      calcularCambioModal();
+    }
+
+    function pagoExactoModal() {
+      const total = obtenerTotal();
+      document.getElementById("montoRecibidoModal").value = total.toFixed(2);
+      calcularCambioModal();
+    }
+
+    function confirmarVentaEfectivo() {
+      const total = obtenerTotal();
+      const recibido = parseFloat(document.getElementById("montoRecibidoModal").value) || 0;
+
+      if (recibido < total) {
+        mostrarAlerta("El dinero recibido es menor al total a pagar.", "Monto insuficiente", "💸");
+        return;
+      }
+
+      const cambio = recibido - total;
+      cerrarModalEfectivo();
+      ejecutarProcesarVenta(total, recibido, cambio);
+    }
+
+    async function ejecutarProcesarVenta(total, recibido, cambio) {
       const venta = {
         fecha: new Date().toISOString(),
         items: carrito,
         total: total,
         metodoPago: metodoSeleccionado,
-        pagoCon: metodoSeleccionado === "Efectivo" ? recibido : total,
-        cambio: metodoSeleccionado === "Efectivo" ? Math.max(0, recibido - total) : 0,
+        pagoCon: recibido,
+        cambio: cambio,
         estado: metodoSeleccionado === "Credito" ? "Pendiente" : "Pagado"
       };
 
@@ -353,7 +418,8 @@
         const fechaLimite = document.getElementById("fechaLimite").value;
 
         if (!cliente || !fechaLimite) {
-          return alert("Para ventas a plazo debes ingresar el nombre del cliente y la fecha límite de pago.");
+          mostrarAlerta("Para ventas a plazo debes ingresar el nombre del cliente y la fecha límite de pago.", "Datos incompletos", "📋");
+          return;
         }
 
         venta.cliente = cliente;
@@ -361,10 +427,8 @@
         venta.fechaLimite = fechaLimite;
       }
 
-      // Guardar Venta
       await db.collection("ventas").add(venta);
 
-      // Descontar Inventario
       for (let item of carrito) {
         const ref = db.collection("productos").doc(item.id);
         const doc = await ref.get();
@@ -374,9 +438,8 @@
         }
       }
 
-      alert(`¡Venta procesada con éxito!\nCambio: $${venta.cambio.toFixed(2)}`);
+      mostrarAlerta(`¡Venta procesada con éxito!\nCambio a entregar: $${cambio.toFixed(2)}`, "¡Venta Exitosa!", "🎉");
       carrito = [];
-      document.getElementById("montoRecibido").value = "";
       renderizarCarrito();
       focarScanner();
     }
