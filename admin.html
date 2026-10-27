@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Administración - Purificadora</title>
+  <title>Panel de Administración - ALEM Distribuidora</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -16,7 +17,7 @@
       <div class="bg-teal-50 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl">🔐</div>
       <div>
         <h2 class="font-bold text-xl text-slate-800">Panel Protegido</h2>
-        <p class="text-xs text-slate-400 mt-1">Ingresa la contraseña de administrador</p>
+        <p class="text-xs text-slate-400 mt-1">ALEM Distribuidora - Administración</p>
       </div>
       <form onsubmit="verificarPassword(event)" class="space-y-4">
         <input type="password" id="adminPassInput" placeholder="Contraseña..." class="w-full border border-slate-300 p-3.5 rounded-xl text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-teal-600" required autofocus>
@@ -27,14 +28,23 @@
   </div>
 
   <!-- HEADER -->
-  <header class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center">
-    <div class="flex items-center gap-2">
-      <span class="text-2xl">⚙️</span>
-      <h1 class="text-xl font-bold">Panel de Administración - Purificadora</h1>
+  <header class="bg-slate-900 text-white px-6 py-4 shadow-md flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <div class="bg-teal-500/20 p-2 rounded-xl">
+        <span class="text-xl">⚙️</span>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold">ALEM Distribuidora</h1>
+        <p class="text-xs text-slate-400">Panel de Administración</p>
+      </div>
     </div>
     <div class="flex items-center gap-3">
-      <button onclick="reiniciarBaseDeDatos()" class="bg-rose-900/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold py-2 px-3 rounded-lg transition border border-rose-800">🗑️ Limpiar Pruebas</button>
-      <a href="index.html" class="bg-teal-600 hover:bg-teal-700 text-white text-sm py-2 px-4 rounded-lg font-semibold transition shadow">Ir a Caja / POS 🛒</a>
+      <button onclick="reiniciarBaseDeDatos()" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold py-2.5 px-3.5 rounded-xl transition border border-rose-800/60 flex items-center gap-1.5 shadow-sm">
+        <span>🗑️</span> Limpiar Pruebas
+      </button>
+      <a href="index.html" class="bg-[#00838f] hover:bg-teal-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition shadow flex items-center gap-1.5">
+        <span>🛒</span> Ir a Caja / POS
+      </a>
     </div>
   </header>
 
@@ -42,24 +52,24 @@
     
     <!-- Registro y Lista de Productos -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+      <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
+        <h2 class="font-bold text-lg mb-4 text-slate-800 flex items-center gap-2">
           <span>📦</span> Registrar Producto
         </h2>
-        <form id="formProducto" onsubmit="guardarProducto(event)" class="space-y-3">
-          <input type="text" id="prodCodigo" placeholder="Código de Barras / QR" class="w-full border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-teal-600 outline-none" required>
-          <input type="text" id="prodNombre" placeholder="Nombre del Producto" class="w-full border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-teal-600 outline-none" required>
-          <input type="text" id="prodCategoria" placeholder="Categoría (Ej. Garrafones, Filtros)" class="w-full border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-teal-600 outline-none" required>
+        <form id="formProducto" onsubmit="guardarProducto(event)" class="space-y-3.5">
+          <input type="text" id="prodCodigo" placeholder="Código de Barras / QR" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-600 outline-none transition" required>
+          <input type="text" id="prodNombre" placeholder="Nombre del Producto" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-600 outline-none transition" required>
+          <input type="text" id="prodCategoria" placeholder="Categoría (Ej. Garrafones, Filtros)" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-600 outline-none transition" required>
           <div class="grid grid-cols-2 gap-3">
-            <input type="number" step="0.01" id="prodPrecio" placeholder="Precio ($)" class="border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-teal-600 outline-none" required>
-            <input type="number" id="prodStock" placeholder="Stock" class="border border-slate-300 p-3 rounded-xl text-sm focus:ring-2 focus:ring-teal-600 outline-none" required>
+            <input type="number" step="0.01" id="prodPrecio" placeholder="Precio ($)" class="bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-600 outline-none transition" required>
+            <input type="number" id="prodStock" placeholder="Stock" class="bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-600 outline-none transition" required>
           </div>
-          <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition shadow">Guardar Producto</button>
+          <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition shadow-md">Guardar Producto</button>
         </form>
       </section>
 
-      <section class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
-        <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+      <section class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 overflow-x-auto">
+        <h2 class="font-bold text-lg mb-4 text-slate-800 flex items-center gap-2">
           <span>📋</span> Inventario Registrado
         </h2>
         <table class="w-full text-left border-collapse">
@@ -79,7 +89,7 @@
     </div>
 
     <!-- Cuentas por Cobrar (A Plazo) -->
-    <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+    <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 overflow-x-auto">
       <h2 class="font-bold text-lg mb-4 text-amber-700 flex items-center gap-2">
         <span>⏳</span> Cuentas por Cobrar / Ventas a Plazo
       </h2>
@@ -99,17 +109,17 @@
     </section>
 
     <!-- Historial de Ventas y Corte de Caja -->
-    <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+    <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 overflow-x-auto">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 class="font-bold text-lg text-emerald-800 flex items-center gap-2">
           <span>📊</span> Historial de Ventas & Corte de Caja
         </h2>
         
         <div class="flex flex-wrap gap-2">
-          <button onclick="realizarCorteCaja()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition shadow flex items-center gap-2">
+          <button onclick="realizarCorteCaja()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-4 py-3 rounded-xl transition shadow flex items-center gap-2">
             <span>✂️</span> Realizar corte de caja por día & Exportar base de datos
           </button>
-          <button onclick="exportarExcelCompleto()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition shadow flex items-center gap-2">
+          <button onclick="exportarExcelCompleto()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold text-sm px-4 py-3 rounded-xl transition shadow flex items-center gap-2">
             <span>📥</span> Exportar Todo a Excel
           </button>
         </div>
@@ -130,7 +140,7 @@
     </section>
   </main>
 
-  <!-- MODAL DE ALERTAS PERSONALIZADO (COMO EN EL INDEX) -->
+  <!-- MODAL DE ALERTAS PERSONALIZADO Y ELEGANTE -->
   <div id="modalAlerta" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
       <div id="alertaIcono" class="text-4xl">⚠️</div>
@@ -154,8 +164,6 @@
     const db = firebase.firestore();
 
     let ventasGlobales = [];
-
-    // Contraseña de Administrador (Puedes cambiarla aquí cuando gustes)
     const ADMIN_PASSWORD = "admin123"; 
 
     function verificarPassword(e) {
@@ -187,14 +195,14 @@
       snap.forEach(doc => {
         const p = doc.data();
         tbody.innerHTML += `
-          <tr class="border-b border-slate-100 hover:bg-slate-50">
+          <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
             <td class="p-3 text-sm font-mono">${p.codigo}</td>
             <td class="p-3 font-semibold text-slate-700">${p.nombre}</td>
             <td class="p-3 text-slate-500">${p.categoria}</td>
             <td class="p-3 text-slate-700 font-bold">$${parseFloat(p.precio).toFixed(2)}</td>
             <td class="p-3 font-bold ${p.stock < 5 ? 'text-rose-600' : 'text-emerald-600'}">${p.stock}</td>
             <td class="p-3 text-center">
-              <button onclick="eliminarProducto('${doc.id}', '${p.nombre}')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-lg transition">
+              <button onclick="eliminarProducto('${doc.id}', '${p.nombre}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">
                 🗑️ Eliminar
               </button>
             </td>
@@ -210,14 +218,14 @@
       snap.forEach(doc => {
         const v = doc.data();
         tbody.innerHTML += `
-          <tr class="border-b border-slate-100 hover:bg-slate-50">
+          <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
             <td class="p-3 font-semibold text-slate-700">${v.cliente || 'N/A'}</td>
             <td class="p-3 text-slate-500">${v.telefono || 'N/A'}</td>
             <td class="p-3 font-bold text-amber-700">$${parseFloat(v.total).toFixed(2)}</td>
             <td class="p-3 text-sm">${v.fechaLimite || 'N/A'}</td>
             <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${v.estado === 'Pagado' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${v.estado}</span></td>
             <td class="p-3">
-              ${v.estado !== 'Pagado' ? `<button onclick="marcarPagado('${doc.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">Marcar Pagado</button>` : '---'}
+              ${v.estado !== 'Pagado' ? `<button onclick="marcarPagado('${doc.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">Marcar Pagado</button>` : '---'}
             </td>
           </tr>
         `;
@@ -233,7 +241,7 @@
         const v = doc.data();
         ventasGlobales.push(v);
         tbody.innerHTML += `
-          <tr class="border-b border-slate-100 hover:bg-slate-50">
+          <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
             <td class="p-3 text-sm text-slate-600">${new Date(v.fecha).toLocaleString()}</td>
             <td class="p-3 text-sm font-medium">${v.metodoPago}</td>
             <td class="p-3 font-bold text-slate-800">$${parseFloat(v.total).toFixed(2)}</td>
@@ -319,7 +327,6 @@
       link.click();
     }
 
-    // FUNCIÓN PARA LIMPIAR TODAS LAS PRUEBAS DE LA BASE DE DATOS
     async function reiniciarBaseDeDatos() {
       if (confirm("⚠️ ¿Estás completamente seguro de borrar TODO el historial de ventas y dejar el sistema limpio para entrega?\n\n(Esto no borra tus productos del inventario, solo las ventas de prueba).")) {
         const snap = await db.collection("ventas").get();
