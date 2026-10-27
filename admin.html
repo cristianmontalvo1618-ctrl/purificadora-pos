@@ -6,11 +6,12 @@
   <title>Panel de Administración - ALEM Distribuidora</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
 
-  <!-- PANTALLA DE LOGIN (INICIO DE SESIÓN) -->
+  <!-- PANTALLA DE LOGIN (Firebase Authentication) -->
   <div id="modalLogin" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl space-y-6 text-center border border-slate-100">
       <div class="bg-teal-50 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl">🔐</div>
@@ -18,8 +19,9 @@
         <h2 class="font-bold text-xl text-slate-800">Panel Protegido</h2>
         <p class="text-xs text-slate-400 mt-1">ALEM Distribuidora - Administración</p>
       </div>
-      <form onsubmit="verificarPassword(event)" class="space-y-4">
-        <input type="password" id="adminPassInput" placeholder="Contraseña..." class="w-full border border-slate-300 p-3.5 rounded-xl text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-teal-600" required autofocus>
+      <form onsubmit="iniciarSesion(event)" class="space-y-3">
+        <input type="email" id="adminEmailInput" placeholder="Correo del administrador" class="w-full border border-slate-300 p-3.5 rounded-xl text-center text-sm focus:outline-none focus:ring-2 focus:ring-teal-600" required autofocus>
+        <input type="password" id="adminPassInput" placeholder="Contraseña..." class="w-full border border-slate-300 p-3.5 rounded-xl text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-teal-600" required>
         <button type="submit" class="w-full bg-[#00838f] hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl transition shadow">Entrar al Panel</button>
       </form>
       <a href="index.html" class="block text-xs font-semibold text-slate-400 hover:text-slate-600">← Volver a la Caja / POS</a>
@@ -41,6 +43,9 @@
       <button onclick="pedirConfirmacionLimpieza()" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold py-2.5 px-3.5 rounded-xl transition border border-rose-800/60 flex items-center gap-1.5 shadow-sm">
         <span>🗑️</span> Limpiar Pruebas
       </button>
+      <button onclick="cerrarSesion()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-2.5 px-3.5 rounded-xl transition shadow flex items-center gap-1.5">
+        <span>🚪</span> Cerrar sesión
+      </button>
       <a href="index.html" class="bg-[#00838f] hover:bg-teal-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition shadow flex items-center gap-1.5">
         <span>🛒</span> Ir a Caja / POS
       </a>
@@ -48,7 +53,7 @@
   </header>
 
   <main class="p-6 max-w-7xl mx-auto w-full space-y-8">
-    
+
     <!-- Registro y Lista de Productos -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
@@ -113,7 +118,7 @@
         <h2 class="font-bold text-lg text-emerald-800 flex items-center gap-2">
           <span>📊</span> Historial de Ventas & Corte de Caja
         </h2>
-        
+
         <div class="flex flex-wrap gap-2">
           <button onclick="realizarCorteCaja()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-4 py-3 rounded-xl transition shadow flex items-center gap-2">
             <span>✂️</span> Realizar corte de caja por día & Exportar base de datos
@@ -144,7 +149,7 @@
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
       <div class="text-4xl">⚠️</div>
       <h3 id="confTitulo" class="font-bold text-lg text-slate-800">¿Estás seguro?</h3>
-      <p id="confMensaje" class="text-sm text-slate-600"></p>
+      <p id="confMensaje" class="text-sm text-slate-600 whitespace-pre-line"></p>
       <div class="grid grid-cols-2 gap-2 pt-2">
         <button onclick="cerrarModalConfirmacion()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Cancelar</button>
         <button id="btnConfAccion" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow">Sí, continuar</button>
@@ -153,7 +158,7 @@
   </div>
 
   <!-- MODAL DE ALERTAS PERSONALIZADO Y ELEGANTE -->
-  <div id="modalAlerta" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div id="modalAlerta" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
       <div id="alertaIcono" class="text-4xl">⚠️</div>
       <h3 id="alertaTitulo" class="font-bold text-lg text-slate-800">Atención</h3>
@@ -174,19 +179,19 @@
 
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // ⚠️ CAMBIA ESTO por el correo real del administrador (el mismo que crees en Firebase).
+    // Esto solo sirve para la interfaz; la seguridad real está en las reglas de Firestore.
+    const ADMIN_EMAIL = "admin@tudominio.com";
 
     let ventasGlobales = [];
-    const ADMIN_PASSWORD = "admin123"; 
+    let productosMap = {};
+    let listeners = [];
 
-    function verificarPassword(e) {
-      e.preventDefault();
-      const pass = document.getElementById("adminPassInput").value;
-      if (pass === ADMIN_PASSWORD) {
-        document.getElementById("modalLogin").classList.add("hidden");
-      } else {
-        mostrarAlerta("Contraseña incorrecta. Intenta de nuevo.", "Acceso Denegado", "❌");
-        document.getElementById("adminPassInput").value = "";
-      }
+    // ---------- Utilidades ----------
+    function esc(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     }
 
     function mostrarAlerta(mensaje, titulo = "Aviso importante", icono = "⚠️") {
@@ -195,90 +200,136 @@
       document.getElementById("alertaIcono").innerText = icono;
       document.getElementById("modalAlerta").classList.remove("hidden");
     }
-
-    function cerrarAlerta() {
-      document.getElementById("modalAlerta").classList.add("hidden");
-    }
+    function cerrarAlerta() { document.getElementById("modalAlerta").classList.add("hidden"); }
 
     function mostrarConfirmacion(titulo, mensaje, onConfirmar) {
       document.getElementById("confTitulo").innerText = titulo;
       document.getElementById("confMensaje").innerText = mensaje;
-      const btn = document.getElementById("btnConfAccion");
-      btn.onclick = () => {
-        cerrarModalConfirmacion();
-        onConfirmar();
-      };
+      document.getElementById("btnConfAccion").onclick = () => { cerrarModalConfirmacion(); onConfirmar(); };
       document.getElementById("modalConfirmacion").classList.remove("hidden");
     }
+    function cerrarModalConfirmacion() { document.getElementById("modalConfirmacion").classList.add("hidden"); }
 
-    function cerrarModalConfirmacion() {
-      document.getElementById("modalConfirmacion").classList.add("hidden");
+    function manejarErrorFirestore(err) {
+      console.error(err);
+      if (err && err.code === "permission-denied") {
+        mostrarAlerta("No tienes permiso para realizar esta acción.", "Acceso Denegado", "⛔");
+      } else {
+        mostrarAlerta("Ocurrió un error. Intenta de nuevo.", "Error", "❌");
+      }
     }
 
-    // Cargar Inventario
-    db.collection("productos").onSnapshot(snap => {
-      const tbody = document.getElementById("tablaInventario");
-      tbody.innerHTML = "";
-      snap.forEach(doc => {
-        const p = doc.data();
-        tbody.innerHTML += `
-          <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-            <td class="p-3 text-sm font-mono">${p.codigo}</td>
-            <td class="p-3 font-semibold text-slate-700">${p.nombre}</td>
-            <td class="p-3 text-slate-500">${p.categoria}</td>
-            <td class="p-3 text-slate-700 font-bold">$${parseFloat(p.precio).toFixed(2)}</td>
-            <td class="p-3 font-bold ${p.stock < 5 ? 'text-rose-600' : 'text-emerald-600'}">${p.stock}</td>
-            <td class="p-3 text-center">
-              <button onclick="eliminarProducto('${doc.id}', '${p.nombre}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">
-                🗑️ Eliminar
-              </button>
-            </td>
-          </tr>
-        `;
+    // ---------- Autenticación ----------
+    function iniciarSesion(e) {
+      e.preventDefault();
+      const email = document.getElementById("adminEmailInput").value.trim();
+      const pass = document.getElementById("adminPassInput").value;
+      auth.signInWithEmailAndPassword(email, pass).catch(() => {
+        mostrarAlerta("Correo o contraseña incorrectos.", "Acceso Denegado", "❌");
+        document.getElementById("adminPassInput").value = "";
       });
+    }
+
+    function cerrarSesion() { auth.signOut(); }
+
+    auth.onAuthStateChanged(user => {
+      detenerListeners();
+      if (user && user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+        document.getElementById("modalLogin").classList.add("hidden");
+        iniciarListeners();
+      } else {
+        if (user) {
+          // Inició sesión alguien que no es el admin (ej. un cajero)
+          auth.signOut();
+          mostrarAlerta("Esta cuenta no tiene permisos de administrador.", "Acceso Denegado", "⛔");
+        }
+        limpiarPantalla();
+        document.getElementById("adminPassInput").value = "";
+        document.getElementById("modalLogin").classList.remove("hidden");
+      }
     });
 
-    // Cargar Créditos
-    db.collection("ventas").where("metodoPago", "==", "Credito").onSnapshot(snap => {
-      const tbody = document.getElementById("tablaCreditos");
-      tbody.innerHTML = "";
-      snap.forEach(doc => {
-        const v = doc.data();
-        tbody.innerHTML += `
-          <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-            <td class="p-3 font-semibold text-slate-700">${v.cliente || 'N/A'}</td>
-            <td class="p-3 text-slate-500">${v.telefono || 'N/A'}</td>
-            <td class="p-3 font-bold text-amber-700">$${parseFloat(v.total).toFixed(2)}</td>
-            <td class="p-3 text-sm">${v.fechaLimite || 'N/A'}</td>
-            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${v.estado === 'Pagado' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${v.estado}</span></td>
-            <td class="p-3">
-              ${v.estado !== 'Pagado' ? `<button onclick="marcarPagado('${doc.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">Marcar Pagado</button>` : '---'}
-            </td>
-          </tr>
-        `;
-      });
-    });
-
-    // Cargar Historial de Ventas
-    db.collection("ventas").onSnapshot(snap => {
-      const tbody = document.getElementById("tablaVentas");
-      tbody.innerHTML = "";
+    function limpiarPantalla() {
+      ["tablaInventario", "tablaCreditos", "tablaVentas"].forEach(id => document.getElementById(id).innerHTML = "");
       ventasGlobales = [];
-      snap.forEach(doc => {
-        const v = doc.data();
-        ventasGlobales.push(v);
-        tbody.innerHTML += `
-          <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-            <td class="p-3 text-sm text-slate-600">${new Date(v.fecha).toLocaleString()}</td>
-            <td class="p-3 text-sm font-medium">${v.metodoPago}</td>
-            <td class="p-3 font-bold text-slate-800">$${parseFloat(v.total).toFixed(2)}</td>
-            <td class="p-3 text-sm">${v.estado}</td>
-            <td class="p-3 text-sm text-slate-500">${v.cliente || '---'}</td>
-          </tr>
-        `;
-      });
-    });
+      productosMap = {};
+    }
 
+    function detenerListeners() {
+      listeners.forEach(unsub => unsub());
+      listeners = [];
+    }
+
+    // ---------- Datos en tiempo real (solo después de iniciar sesión) ----------
+    function iniciarListeners() {
+      // Inventario
+      listeners.push(db.collection("productos").onSnapshot(snap => {
+        const tbody = document.getElementById("tablaInventario");
+        tbody.innerHTML = "";
+        productosMap = {};
+        snap.forEach(doc => {
+          const p = doc.data();
+          productosMap[doc.id] = p.nombre;
+          tbody.innerHTML += `
+            <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+              <td class="p-3 text-sm font-mono">${esc(p.codigo)}</td>
+              <td class="p-3 font-semibold text-slate-700">${esc(p.nombre)}</td>
+              <td class="p-3 text-slate-500">${esc(p.categoria)}</td>
+              <td class="p-3 text-slate-700 font-bold">$${parseFloat(p.precio).toFixed(2)}</td>
+              <td class="p-3 font-bold ${p.stock < 5 ? 'text-rose-600' : 'text-emerald-600'}">${esc(p.stock)}</td>
+              <td class="p-3 text-center">
+                <button onclick="eliminarProducto('${doc.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">
+                  🗑️ Eliminar
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+      }, manejarErrorFirestore));
+
+      // Créditos
+      listeners.push(db.collection("ventas").where("metodoPago", "==", "Credito").onSnapshot(snap => {
+        const tbody = document.getElementById("tablaCreditos");
+        tbody.innerHTML = "";
+        snap.forEach(doc => {
+          const v = doc.data();
+          tbody.innerHTML += `
+            <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+              <td class="p-3 font-semibold text-slate-700">${esc(v.cliente || 'N/A')}</td>
+              <td class="p-3 text-slate-500">${esc(v.telefono || 'N/A')}</td>
+              <td class="p-3 font-bold text-amber-700">$${parseFloat(v.total).toFixed(2)}</td>
+              <td class="p-3 text-sm">${esc(v.fechaLimite || 'N/A')}</td>
+              <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${v.estado === 'Pagado' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${esc(v.estado)}</span></td>
+              <td class="p-3">
+                ${v.estado !== 'Pagado' ? `<button onclick="marcarPagado('${doc.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">Marcar Pagado</button>` : '---'}
+              </td>
+            </tr>
+          `;
+        });
+      }, manejarErrorFirestore));
+
+      // Historial de ventas
+      listeners.push(db.collection("ventas").onSnapshot(snap => {
+        const tbody = document.getElementById("tablaVentas");
+        tbody.innerHTML = "";
+        ventasGlobales = [];
+        snap.forEach(doc => {
+          const v = doc.data();
+          ventasGlobales.push(v);
+          tbody.innerHTML += `
+            <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+              <td class="p-3 text-sm text-slate-600">${new Date(v.fecha).toLocaleString()}</td>
+              <td class="p-3 text-sm font-medium">${esc(v.metodoPago)}</td>
+              <td class="p-3 font-bold text-slate-800">$${parseFloat(v.total).toFixed(2)}</td>
+              <td class="p-3 text-sm">${esc(v.estado)}</td>
+              <td class="p-3 text-sm text-slate-500">${esc(v.cliente || '---')}</td>
+            </tr>
+          `;
+        });
+      }, manejarErrorFirestore));
+    }
+
+    // ---------- Acciones ----------
     async function guardarProducto(e) {
       e.preventDefault();
       const p = {
@@ -288,22 +339,28 @@
         precio: parseFloat(document.getElementById("prodPrecio").value),
         stock: parseInt(document.getElementById("prodStock").value)
       };
-
-      await db.collection("productos").add(p);
-      document.getElementById("formProducto").reset();
-      mostrarAlerta("El producto se registró correctamente en el sistema.", "¡Producto Guardado!", "✅");
+      try {
+        await db.collection("productos").add(p);
+        document.getElementById("formProducto").reset();
+        mostrarAlerta("El producto se registró correctamente en el sistema.", "¡Producto Guardado!", "✅");
+      } catch (err) { manejarErrorFirestore(err); }
     }
 
-    function eliminarProducto(id, nombre) {
+    function eliminarProducto(id) {
+      const nombre = productosMap[id] || "este producto";
       mostrarConfirmacion("Eliminar Producto", `¿Estás seguro de que deseas eliminar el producto "${nombre}" del inventario?`, async () => {
-        await db.collection("productos").doc(id).delete();
-        mostrarAlerta(`Se eliminó "${nombre}" correctamente.`, "Producto Eliminado", "🗑️");
+        try {
+          await db.collection("productos").doc(id).delete();
+          mostrarAlerta(`Se eliminó "${nombre}" correctamente.`, "Producto Eliminado", "🗑️");
+        } catch (err) { manejarErrorFirestore(err); }
       });
     }
 
     async function marcarPagado(id) {
-      await db.collection("ventas").doc(id).update({ estado: "Pagado" });
-      mostrarAlerta("El crédito fue registrado como pagado exitosamente.", "Crédito Actualizado", "💰");
+      try {
+        await db.collection("ventas").doc(id).update({ estado: "Pagado" });
+        mostrarAlerta("El crédito fue registrado como pagado exitosamente.", "Crédito Actualizado", "💰");
+      } catch (err) { manejarErrorFirestore(err); }
     }
 
     function realizarCorteCaja() {
@@ -315,16 +372,11 @@
         return;
       }
 
-      let totalEfectivo = 0;
-      let totalTransferencia = 0;
-      let totalCredito = 0;
-
+      let totalEfectivo = 0, totalTransferencia = 0;
       ventasHoy.forEach(v => {
         if (v.metodoPago === "Efectivo") totalEfectivo += parseFloat(v.total);
         if (v.metodoPago === "Transferencia") totalTransferencia += parseFloat(v.total);
-        if (v.metodoPago === "Credito") totalCredito += parseFloat(v.total);
       });
-
       const totalCaja = totalEfectivo + totalTransferencia;
 
       const resumenMsg = `Efectivo en Caja: $${totalEfectivo.toFixed(2)} | Transferencias: $${totalTransferencia.toFixed(2)} | Total del Día: $${totalCaja.toFixed(2)}`;
@@ -341,13 +393,27 @@
       generarCSV(ventasGlobales, `Historial_BaseDeDatos_Ventas_${new Date().toISOString().slice(0,10)}.csv`);
     }
 
+    // Evita inyección de fórmulas en Excel (celdas que empiezan con = + - @)
+    function csvSeguro(valor) {
+      let s = String(valor ?? "");
+      if (/^[=+\-@]/.test(s)) s = "'" + s;
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+
     function generarCSV(lista, nombreArchivo) {
       let csv = "Fecha_Hora,Metodo_Pago,Total,Estado,Cliente,Telefono\n";
       lista.forEach(v => {
-        csv += `"${new Date(v.fecha).toLocaleString()}","${v.metodoPago}","${v.total}","${v.estado}","${v.cliente || ''}","${v.telefono || ''}"\n`;
+        csv += [
+          csvSeguro(new Date(v.fecha).toLocaleString()),
+          csvSeguro(v.metodoPago),
+          csvSeguro(v.total),
+          csvSeguro(v.estado),
+          csvSeguro(v.cliente),
+          csvSeguro(v.telefono)
+        ].join(",") + "\n";
       });
 
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = nombreArchivo;
@@ -355,17 +421,18 @@
     }
 
     function pedirConfirmacionLimpieza() {
-      mostrarConfirmacion("Limpiar Sistema", "⚠️ ¿Estás completamente seguro de borrar TODO el historial de ventas y dejar el sistema limpio para entrega?\n\n(Esto no borra tus productos del inventario, solo las ventas de prueba).", async () => {
-        const snap = await db.collection("ventas").get();
-        const batch = db.batch();
-        snap.forEach(doc => {
-          batch.delete(doc.ref);
-        });
-        await batch.commit();
-        mostrarAlerta("El historial de ventas de prueba se ha limpiado por completo. El sistema está listo para el cliente.", "¡Sistema Limpio!", "✨");
+      mostrarConfirmacion("Limpiar Sistema", "⚠️ ¿Estás completamente seguro de borrar TODO el historial de ventas?\n\n(Esto no borra tus productos del inventario, solo las ventas.)", async () => {
+        try {
+          const snap = await db.collection("ventas").get();
+          const batch = db.batch();
+          snap.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+          mostrarAlerta("El historial de ventas se ha limpiado por completo.", "¡Sistema Limpio!", "✨");
+        } catch (err) { manejarErrorFirestore(err); }
       });
     }
   </script>
 </body>
 </html>
+
 
