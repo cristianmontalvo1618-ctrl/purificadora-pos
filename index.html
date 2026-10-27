@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,6 +7,7 @@
   <title>ALEM Distribuidora - Sistema de Venta</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <style>
     @media print {
@@ -17,6 +19,22 @@
   </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
+
+  <!-- PANTALLA DE LOGIN DEL CAJERO -->
+  <div id="modalLogin" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[70] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl space-y-6 text-center border border-slate-100">
+      <div class="bg-teal-50 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl">💧</div>
+      <div>
+        <h2 class="font-bold text-xl text-slate-800">Iniciar sesión</h2>
+        <p class="text-xs text-slate-400 mt-1">ALEM Distribuidora - Caja / POS</p>
+      </div>
+      <form onsubmit="iniciarSesion(event)" class="space-y-3">
+        <input type="email" id="loginEmail" placeholder="Correo" class="w-full border border-slate-300 p-3.5 rounded-xl text-center text-sm focus:outline-none focus:ring-2 focus:ring-teal-600" required>
+        <input type="password" id="loginPass" placeholder="Contraseña..." class="w-full border border-slate-300 p-3.5 rounded-xl text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-teal-600" required>
+        <button type="submit" class="w-full bg-[#00838f] hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl transition shadow">Entrar</button>
+      </form>
+    </div>
+  </div>
 
   <!-- Header Turquesa -->
   <header class="bg-[#00838f] text-white px-6 py-3 shadow-md flex justify-between items-center">
@@ -34,6 +52,7 @@
         <span>|||||</span> Escanear Código
       </button>
       <a href="admin.html" class="bg-teal-900/40 hover:bg-teal-900/60 text-white text-xs font-bold py-2 px-3 rounded-lg transition">⚙️ Admin</a>
+      <button onclick="cerrarSesion()" class="bg-teal-900/40 hover:bg-teal-900/60 text-white text-xs font-bold py-2 px-3 rounded-lg transition">🚪 Salir</button>
     </div>
   </header>
 
@@ -99,7 +118,7 @@
         </div>
       </div>
 
-      <button onclick="preProcesarVenta()" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl text-base shadow-md transition transform active:scale-95">
+      <button id="btnProcesar" onclick="preProcesarVenta()" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl text-base shadow-md transition transform active:scale-95">
         ✅ Procesar Venta
       </button>
     </section>
@@ -152,7 +171,7 @@
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100 text-center">
       <div class="text-4xl">🎉</div>
       <h3 class="font-bold text-lg text-slate-800">¡Venta Exitosa!</h3>
-      
+
       <!-- Contenedor del Ticket Imprimible / PDF -->
       <div id="ticketImprimible" class="bg-slate-50 p-4 rounded-2xl text-left font-mono text-xs text-slate-700 space-y-1.5 border border-slate-200">
         <div class="text-center font-bold text-sm text-[#00838f]">ALEM Distribuidora</div>
@@ -188,7 +207,7 @@
       <div class="text-4xl">💬</div>
       <h3 class="font-bold text-lg text-slate-800">Enviar Recibo por WhatsApp</h3>
       <p class="text-xs text-slate-500">Ingresa el número de teléfono del cliente (10 dígitos con código de país, ej: 521...):</p>
-      
+
       <input type="tel" id="inputTelCliente" placeholder="Ej. 5215512345678" class="w-full border border-slate-300 p-3 rounded-xl text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-emerald-500">
 
       <div class="grid grid-cols-2 gap-2 pt-2">
@@ -199,7 +218,7 @@
   </div>
 
   <!-- MODAL DE ALERTAS GENERALES -->
-  <div id="modalAlerta" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div id="modalAlerta" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
       <div id="alertaIcono" class="text-4xl">⚠️</div>
       <h3 id="alertaTitulo" class="font-bold text-lg text-slate-800">Atención</h3>
@@ -220,13 +239,21 @@
 
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
 
     let productosCatalogo = [];
     let carrito = [];
     let metodoSeleccionado = "Efectivo";
     let ultimaVentaDatos = null;
+    let unsubProductos = null;
+    let procesandoVenta = false;
 
     const barcodeInput = document.getElementById("barcodeInput");
+
+    // Escapa texto para insertarlo de forma segura en HTML
+    function esc(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
 
     function mostrarAlerta(mensaje, titulo = "Aviso importante", icono = "⚠️") {
       document.getElementById("alertaTitulo").innerText = titulo;
@@ -243,6 +270,37 @@
       barcodeInput.focus();
     }
 
+    // ---------- Autenticación ----------
+    function iniciarSesion(e) {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const pass = document.getElementById("loginPass").value;
+      auth.signInWithEmailAndPassword(email, pass).catch(() => {
+        mostrarAlerta("Correo o contraseña incorrectos.", "Acceso Denegado", "❌");
+        document.getElementById("loginPass").value = "";
+      });
+    }
+
+    function cerrarSesion() {
+      auth.signOut();
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("modalLogin").classList.add("hidden");
+        document.getElementById("loginPass").value = "";
+        iniciarCatalogo();
+        setTimeout(focarScanner, 200);
+      } else {
+        if (unsubProductos) { unsubProductos(); unsubProductos = null; }
+        productosCatalogo = [];
+        carrito = [];
+        renderizarCarrito();
+        document.getElementById("gridProductos").innerHTML = `<div class="col-span-full text-center text-slate-400 py-10">Inicia sesión para ver el catálogo.</div>`;
+        document.getElementById("modalLogin").classList.remove("hidden");
+      }
+    });
+
     document.addEventListener("click", (e) => {
       if (e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT" && e.target.tagName !== "BUTTON" && !e.target.closest('.fixed')) {
         focarScanner();
@@ -256,13 +314,20 @@
       }
     });
 
-    db.collection("productos").onSnapshot(snap => {
-      productosCatalogo = [];
-      snap.forEach(doc => {
-        productosCatalogo.push({ id: doc.id, ...doc.data() });
+    // ---------- Catálogo (solo con sesión iniciada) ----------
+    function iniciarCatalogo() {
+      if (unsubProductos) unsubProductos();
+      unsubProductos = db.collection("productos").onSnapshot(snap => {
+        productosCatalogo = [];
+        snap.forEach(doc => {
+          productosCatalogo.push({ id: doc.id, ...doc.data() });
+        });
+        filtrarProductos();
+      }, err => {
+        console.error(err);
+        mostrarAlerta("No se pudo cargar el catálogo. Revisa tu conexión o permisos.", "Error", "❌");
       });
-      renderizarGrid(productosCatalogo);
-    });
+    }
 
     function getBadgeColorClass(categoria) {
       const cat = (categoria || '').toLowerCase();
@@ -288,10 +353,10 @@
           <div onclick="agregarAlCarrito('${p.id}')" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition cursor-pointer group">
             <div>
               <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${colorBadge} mb-2">
-                ${p.categoria || 'General'}
+                ${esc(p.categoria || 'General')}
               </span>
-              <h3 class="font-bold text-slate-800 text-base group-hover:text-teal-700 transition">${p.nombre}</h3>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">Cod: ${p.codigo}</p>
+              <h3 class="font-bold text-slate-800 text-base group-hover:text-teal-700 transition">${esc(p.nombre)}</h3>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">Cod: ${esc(p.codigo)}</p>
             </div>
             <div class="flex justify-between items-center mt-4">
               <span class="text-lg font-black text-[#00838f]">$${parseFloat(p.precio).toFixed(2)}</span>
@@ -306,7 +371,7 @@
 
     function filtrarProductos() {
       const query = barcodeInput.value.trim().toLowerCase();
-      const filtrados = productosCatalogo.filter(p => 
+      const filtrados = productosCatalogo.filter(p =>
         (p.nombre && p.nombre.toLowerCase().includes(query)) ||
         (p.codigo && p.codigo.toLowerCase().includes(query)) ||
         (p.categoria && p.categoria.toLowerCase().includes(query))
@@ -361,7 +426,7 @@
         itemsDiv.innerHTML += `
           <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs">
             <div class="flex-1 pr-2">
-              <p class="font-bold text-slate-700">${p.nombre}</p>
+              <p class="font-bold text-slate-700">${esc(p.nombre)}</p>
               <p class="text-slate-400">$${parseFloat(p.precio).toFixed(2)} c/u</p>
             </div>
             <div class="flex items-center gap-2">
@@ -388,7 +453,7 @@
 
     function seleccionarMetodo(metodo) {
       metodoSeleccionado = metodo;
-      
+
       const btnE = document.getElementById("btnEfectivo");
       const btnT = document.getElementById("btnTransferencia");
       const btnC = document.getElementById("btnCredito");
@@ -460,14 +525,21 @@
     }
 
     async function ejecutarProcesarVenta(total, recibido, cambio) {
+      if (procesandoVenta) return; // evita doble clic
+      if (!auth.currentUser) {
+        mostrarAlerta("Tu sesión expiró. Inicia sesión de nuevo.", "Sesión requerida", "🔐");
+        return;
+      }
+
       const venta = {
         fecha: new Date().toISOString(),
-        items: [...carrito],
+        items: carrito.map(i => ({ id: i.id, codigo: i.codigo, nombre: i.nombre, precio: i.precio, cant: i.cant })),
         total: total,
         metodoPago: metodoSeleccionado,
         pagoCon: recibido,
         cambio: cambio,
-        estado: metodoSeleccionado === "Credito" ? "Pendiente" : "Pagado"
+        estado: metodoSeleccionado === "Credito" ? "Pendiente" : "Pagado",
+        vendedor: auth.currentUser.email // quién hizo la venta
       };
 
       if (metodoSeleccionado === "Credito") {
@@ -485,30 +557,47 @@
         venta.fechaLimite = fechaLimite;
       }
 
-      await db.collection("ventas").add(venta);
+      procesandoVenta = true;
+      document.getElementById("btnProcesar").disabled = true;
 
-      for (let item of carrito) {
-        const ref = db.collection("productos").doc(item.id);
-        const doc = await ref.get();
-        if (doc.exists) {
-          const nuevoStock = Math.max(0, (doc.data().stock || 0) - item.cant);
-          await ref.update({ stock: nuevoStock });
+      try {
+        // Venta y descuento de stock en una sola operación
+        const batch = db.batch();
+        batch.set(db.collection("ventas").doc(), venta);
+        carrito.forEach(item => {
+          batch.update(db.collection("productos").doc(item.id), {
+            stock: firebase.firestore.FieldValue.increment(-item.cant)
+          });
+        });
+        await batch.commit();
+
+        ultimaVentaDatos = venta;
+        prepararTicketModal(venta);
+
+        carrito = [];
+        renderizarCarrito();
+        document.getElementById("clienteNombre").value = "";
+        document.getElementById("clienteTel").value = "";
+        document.getElementById("fechaLimite").value = "";
+      } catch (err) {
+        console.error(err);
+        if (err && err.code === "permission-denied") {
+          mostrarAlerta("Tu usuario no tiene permiso para registrar esta venta.", "Acceso Denegado", "⛔");
+        } else {
+          mostrarAlerta("No se pudo registrar la venta. Revisa tu conexión e intenta de nuevo.", "Error", "❌");
         }
+      } finally {
+        procesandoVenta = false;
+        document.getElementById("btnProcesar").disabled = false;
       }
-
-      ultimaVentaDatos = venta;
-      prepararTicketModal(venta);
-
-      carrito = [];
-      renderizarCarrito();
     }
 
     function prepararTicketModal(v) {
       document.getElementById("ticketDetalleFecha").innerText = new Date(v.fecha).toLocaleString();
-      
+
       let itemsHtml = "";
       v.items.forEach(i => {
-        itemsHtml += `<div class="flex justify-between"><span>${i.cant}x ${i.nombre}</span><span>$${(i.precio * i.cant).toFixed(2)}</span></div>`;
+        itemsHtml += `<div class="flex justify-between"><span>${i.cant}x ${esc(i.nombre)}</span><span>$${(i.precio * i.cant).toFixed(2)}</span></div>`;
       });
       document.getElementById("ticketDetalleItems").innerHTML = itemsHtml;
       document.getElementById("ticketDetalleTotal").innerText = `$${v.total.toFixed(2)}`;
@@ -519,7 +608,7 @@
         extraHtml = `<div class="flex justify-between"><span>Recibido:</span><span>$${v.pagoCon.toFixed(2)}</span></div>
                      <div class="flex justify-between"><span>Cambio:</span><span>$${v.cambio.toFixed(2)}</span></div>`;
       } else if (v.metodoPago === "Credito") {
-        extraHtml = `<div>Cliente: ${v.cliente}</div><div>Límite: ${v.fechaLimite}</div>`;
+        extraHtml = `<div>Cliente: ${esc(v.cliente)}</div><div>Límite: ${esc(v.fechaLimite)}</div>`;
       }
       document.getElementById("ticketExtraEfectivo").innerHTML = extraHtml;
 
@@ -550,32 +639,32 @@
       cerrarModalWhatsApp();
 
       const v = ultimaVentaDatos;
-      let texto = `💧 *ALEM Distribuidora* 💧%0A`;
-      texto += `_Comprobante de Compra_ %0A`;
-      texto += `-----------------------------------%0A`;
-      texto += `📅 *Fecha:* ${new Date(v.fecha).toLocaleString()}%0A`;
-      texto += `-----------------------------------%0A`;
-      
+      let texto = `💧 *ALEM Distribuidora* 💧\n`;
+      texto += `_Comprobante de Compra_ \n`;
+      texto += `-----------------------------------\n`;
+      texto += `📅 *Fecha:* ${new Date(v.fecha).toLocaleString()}\n`;
+      texto += `-----------------------------------\n`;
+
       v.items.forEach(i => {
-        texto += `▪️ *${i.cant}x* ${i.nombre} — *$${(i.precio * i.cant).toFixed(2)}*%0A`;
+        texto += `▪️ *${i.cant}x* ${i.nombre} — *$${(i.precio * i.cant).toFixed(2)}*\n`;
       });
 
-      texto += `-----------------------------------%0A`;
-      texto += `💰 *TOTAL A PAGAR: $${v.total.toFixed(2)}*%0A`;
-      texto += `💳 *Método de Pago:* ${v.metodoPago}%0A`;
+      texto += `-----------------------------------\n`;
+      texto += `💰 *TOTAL A PAGAR: $${v.total.toFixed(2)}*\n`;
+      texto += `💳 *Método de Pago:* ${v.metodoPago}\n`;
 
       if (v.metodoPago === "Efectivo") {
-        texto += `💵 Recibido: $${v.pagoCon.toFixed(2)}%0A`;
-        texto += `🪙 Cambio entregado: $${v.cambio.toFixed(2)}%0A`;
+        texto += `💵 Recibido: $${v.pagoCon.toFixed(2)}\n`;
+        texto += `🪙 Cambio entregado: $${v.cambio.toFixed(2)}\n`;
       } else if (v.metodoPago === "Credito") {
-        texto += `👤 Cliente: ${v.cliente}%0A`;
-        texto += `⏳ Fecha Límite: ${v.fechaLimite}%0A`;
+        texto += `👤 Cliente: ${v.cliente}\n`;
+        texto += `⏳ Fecha Límite: ${v.fechaLimite}\n`;
       }
 
-      texto += `-----------------------------------%0A`;
+      texto += `-----------------------------------\n`;
       texto += `¡Agradecemos su preferencia! 🙏✨`;
 
-      window.open(`https://wa.me/${tel.replace(/\D/g, '')}?text=${texto}`, '_blank');
+      window.open(`https://wa.me/${tel.replace(/\D/g, '')}?text=${encodeURIComponent(texto)}`, '_blank');
     }
 
     function cerrarModalTicket() {
