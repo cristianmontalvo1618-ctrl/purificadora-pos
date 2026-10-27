@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -39,7 +38,7 @@
       </div>
     </div>
     <div class="flex items-center gap-3">
-      <button onclick="reiniciarBaseDeDatos()" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold py-2.5 px-3.5 rounded-xl transition border border-rose-800/60 flex items-center gap-1.5 shadow-sm">
+      <button onclick="pedirConfirmacionLimpieza()" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold py-2.5 px-3.5 rounded-xl transition border border-rose-800/60 flex items-center gap-1.5 shadow-sm">
         <span>🗑️</span> Limpiar Pruebas
       </button>
       <a href="index.html" class="bg-[#00838f] hover:bg-teal-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition shadow flex items-center gap-1.5">
@@ -140,6 +139,19 @@
     </section>
   </main>
 
+  <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO (ELIMINAR / LIMPIAR) -->
+  <div id="modalConfirmacion" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
+      <div class="text-4xl">⚠️</div>
+      <h3 id="confTitulo" class="font-bold text-lg text-slate-800">¿Estás seguro?</h3>
+      <p id="confMensaje" class="text-sm text-slate-600"></p>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <button onclick="cerrarModalConfirmacion()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Cancelar</button>
+        <button id="btnConfAccion" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow">Sí, continuar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL DE ALERTAS PERSONALIZADO Y ELEGANTE -->
   <div id="modalAlerta" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
@@ -186,6 +198,21 @@
 
     function cerrarAlerta() {
       document.getElementById("modalAlerta").classList.add("hidden");
+    }
+
+    function mostrarConfirmacion(titulo, mensaje, onConfirmar) {
+      document.getElementById("confTitulo").innerText = titulo;
+      document.getElementById("confMensaje").innerText = mensaje;
+      const btn = document.getElementById("btnConfAccion");
+      btn.onclick = () => {
+        cerrarModalConfirmacion();
+        onConfirmar();
+      };
+      document.getElementById("modalConfirmacion").classList.remove("hidden");
+    }
+
+    function cerrarModalConfirmacion() {
+      document.getElementById("modalConfirmacion").classList.add("hidden");
     }
 
     // Cargar Inventario
@@ -267,11 +294,11 @@
       mostrarAlerta("El producto se registró correctamente en el sistema.", "¡Producto Guardado!", "✅");
     }
 
-    async function eliminarProducto(id, nombre) {
-      if (confirm(`¿Estás seguro de que deseas eliminar el producto "${nombre}"?`)) {
+    function eliminarProducto(id, nombre) {
+      mostrarConfirmacion("Eliminar Producto", `¿Estás seguro de que deseas eliminar el producto "${nombre}" del inventario?`, async () => {
         await db.collection("productos").doc(id).delete();
-        mostrarAlerta(`Se eliminó "${nombre}" del inventario.`, "Producto Eliminado", "🗑️");
-      }
+        mostrarAlerta(`Se eliminó "${nombre}" correctamente.`, "Producto Eliminado", "🗑️");
+      });
     }
 
     async function marcarPagado(id) {
@@ -327,8 +354,8 @@
       link.click();
     }
 
-    async function reiniciarBaseDeDatos() {
-      if (confirm("⚠️ ¿Estás completamente seguro de borrar TODO el historial de ventas y dejar el sistema limpio para entrega?\n\n(Esto no borra tus productos del inventario, solo las ventas de prueba).")) {
+    function pedirConfirmacionLimpieza() {
+      mostrarConfirmacion("Limpiar Sistema", "⚠️ ¿Estás completamente seguro de borrar TODO el historial de ventas y dejar el sistema limpio para entrega?\n\n(Esto no borra tus productos del inventario, solo las ventas de prueba).", async () => {
         const snap = await db.collection("ventas").get();
         const batch = db.batch();
         snap.forEach(doc => {
@@ -336,8 +363,9 @@
         });
         await batch.commit();
         mostrarAlerta("El historial de ventas de prueba se ha limpiado por completo. El sistema está listo para el cliente.", "¡Sistema Limpio!", "✨");
-      }
+      });
     }
   </script>
 </body>
 </html>
+
