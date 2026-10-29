@@ -124,7 +124,7 @@
 
   </main>
 
-  <!-- MODAL EXCLUSIVO PARA CONFIGURACIÓN DE TAPAS -->
+  <!-- MODAL EXCLUSIVO PARA CONFIGURACIÓN DE TAPAS (LIMPIO Y DIRECTO) -->
   <div id="modalTapaConfig" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[75] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-3.5 border border-slate-100">
       <div class="flex justify-between items-center border-b pb-3">
@@ -136,7 +136,7 @@
 
       <div class="bg-teal-50 p-2.5 rounded-2xl text-center border border-teal-100">
         <h4 id="tapaModalNombre" class="font-bold text-teal-900 text-sm"></h4>
-        <p class="text-[11px] text-teal-700 mt-0.5">Selecciona el tipo, color y precio unitario</p>
+        <p class="text-[11px] text-teal-700 mt-0.5">Selecciona tipo, color, precio y presentación</p>
       </div>
 
       <div class="space-y-1">
@@ -445,7 +445,7 @@
       lista.forEach(p => {
         const colorBadge = getBadgeColorClass(p.categoria);
         const esTapaProducto = esTapa(p);
-        const stockMostrado = esTapaProducto ? 'Variable' : p.stock;
+        const stockMostrado = esTapaProducto && p.codigo === 'TAPA-GENERICA' ? 'Variable' : p.stock;
 
         grid.innerHTML += `
           <div onclick="procesarSeleccionProducto('${p.id}')" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition cursor-pointer group">
@@ -593,7 +593,6 @@
       const subtotal = precioPzEditable * totalPiezasReales;
 
       const itemNombreCompleto = `Tapa ${tipoTapa} (${color})`;
-      // Generar ID único dinámico para la variante de tapa (ej. Tapa Ciel-Azul Pepsi)
       const varianteId = `${tapaSeleccionadaTemp.id}_${tipoTapa}_${color}`.replace(/\s+/g, '_').toLowerCase();
 
       const existingIndex = carrito.findIndex(i => i.varianteId === varianteId && i.precioBase === precioPzEditable);
@@ -795,7 +794,6 @@
         const batch = db.batch();
         batch.set(db.collection("ventas").doc(), venta);
         
-        // Actualizar stock de forma inteligente
         for (const item of carrito) {
           if (item.esTapa && item.varianteId) {
             const varRef = db.collection("productos").doc(item.varianteId);
@@ -806,7 +804,6 @@
                 stock: firebase.firestore.FieldValue.increment(-item.cantPiezasReales)
               });
             } else {
-              // Si la variante no existe aún en la base de datos, la creamos automáticamente con stock inicial 0 (o negativo según la venta)
               batch.set(varRef, {
                 codigo: item.codigo + "-" + item.tipoTapa.substring(0,3).toUpperCase() + "-" + item.color.substring(0,3).toUpperCase(),
                 nombre: item.nombre,
@@ -926,4 +923,3 @@
   </script>
 </body>
 </html>
-
