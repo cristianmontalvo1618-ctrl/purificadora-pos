@@ -20,7 +20,7 @@
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
 
   <!-- PANTALLA DE LOGIN DEL CAJERO -->
-  <div id="modalLogin" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[70] flex items-center justify-center p-4">
+  <div id="modalLogin" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[70] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl space-y-6 text-center border border-slate-100">
       <div class="bg-teal-50 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl">💧</div>
       <div>
@@ -445,6 +445,7 @@
       lista.forEach(p => {
         const colorBadge = getBadgeColorClass(p.categoria);
         const esTapaProducto = esTapa(p);
+        const stockMostrado = esTapaProducto ? 'Variable' : p.stock;
 
         grid.innerHTML += `
           <div onclick="procesarSeleccionProducto('${p.id}')" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition cursor-pointer group">
@@ -453,7 +454,7 @@
                 ${esc(p.categoria || 'General')}
               </span>
               <h3 class="font-bold text-slate-800 text-base group-hover:text-teal-700 transition">${esc(p.nombre)}</h3>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">Cod: ${esc(p.codigo)} | Stock: ${p.stock} pzas</p>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">Cod: ${esc(p.codigo)} | Stock: ${stockMostrado}</p>
             </div>
             <div class="flex justify-between items-center mt-4">
               <span class="text-lg font-black text-[#00838f]">$${parseFloat(p.precio).toFixed(2)} <span class="text-[10px] text-slate-400 font-normal">c/u</span></span>
@@ -592,8 +593,10 @@
       const subtotal = precioPzEditable * totalPiezasReales;
 
       const itemNombreCompleto = `Tapa ${tipoTapa} (${color})`;
+      // Generar ID único dinámico para la variante de tapa (ej. Tapa Ciel-Azul Pepsi)
+      const varianteId = `${tapaSeleccionadaTemp.id}_${tipoTapa}_${color}`.replace(/\s+/g, '_').toLowerCase();
 
-      const existingIndex = carrito.findIndex(i => i.id === tapaSeleccionadaTemp.id && i.tipoTapa === tipoTapa && i.color === color && i.tapaTipoPres === tapaTipoPres && i.precioBase === precioPzEditable);
+      const existingIndex = carrito.findIndex(i => i.varianteId === varianteId && i.precioBase === precioPzEditable);
 
       if (existingIndex > -1) {
         carrito[existingIndex].cantPres += cantPres;
@@ -602,6 +605,7 @@
       } else {
         carrito.push({
           id: tapaSeleccionadaTemp.id,
+          varianteId: varianteId,
           codigo: tapaSeleccionadaTemp.codigo,
           nombre: itemNombreCompleto,
           tipoTapa: tipoTapa,
@@ -612,7 +616,8 @@
           presNombre: tapaNombrePres,
           cantPres: cantPres,
           cantPiezasReales: totalPiezasReales,
-          subtotal: subtotal
+          subtotal: subtotal,
+          categoria: tapaSeleccionadaTemp.categoria || 'Tapas'
         });
       }
 
@@ -758,6 +763,7 @@
         fecha: new Date().toISOString(),
         items: carrito.map(i => ({
           id: i.id,
+          varianteId: i.varianteId || null,
           codigo: i.codigo,
           nombre: i.nombre,
           precioBase: i.precioBase,
@@ -789,11 +795,33 @@
         const batch = db.batch();
         batch.set(db.collection("ventas").doc(), venta);
         
-        carrito.forEach(item => {
-          batch.update(db.collection("productos").doc(item.id), {
-            stock: firebase.firestore.FieldValue.increment(-item.cantPiezasReales)
-          });
-        });
+        // Actualizar stock de forma inteligente
+        for (const item of carrito) {
+          if (item.esTapa && item.varianteId) {
+            const varRef = db.collection("productos").doc(item.varianteId);
+            const varDoc = await varRef.get();
+            
+            if (varDoc.exists) {
+              batch.update(varRef, {
+                stock: firebase.firestore.FieldValue.increment(-item.cantPiezasReales)
+              });
+            } else {
+              // Si la variante no existe aún en la base de datos, la creamos automáticamente con stock inicial 0 (o negativo según la venta)
+              batch.set(varRef, {
+                codigo: item.codigo + "-" + item.tipoTapa.substring(0,3).toUpperCase() + "-" + item.color.substring(0,3).toUpperCase(),
+                nombre: item.nombre,
+                categoria: "Tapas (Variantes)",
+                precio: item.precioBase,
+                stock: -item.cantPiezasReales
+              });
+            }
+          } else {
+            batch.update(db.collection("productos").doc(item.id), {
+              stock: firebase.firestore.FieldValue.increment(-item.cantPiezasReales)
+            });
+          }
+        }
+
         await batch.commit();
 
         ultimaVentaDatos = venta;
@@ -898,3 +926,4 @@
   </script>
 </body>
 </html>
+
