@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -74,13 +75,13 @@
 
       <section class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 overflow-x-auto">
         <h2 class="font-bold text-lg mb-4 text-slate-800 flex items-center gap-2">
-          <span>📋</span> Inventario Registrado
+          <span>📋</span> Inventario Registrado (Incluyendo Tapas por Color)
         </h2>
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="border-b text-xs text-slate-400 uppercase tracking-wider">
               <th class="p-3">Código</th>
-              <th class="p-3">Producto</th>
+              <th class="p-3">Producto / Variante</th>
               <th class="p-3">Categoría</th>
               <th class="p-3">Precio</th>
               <th class="p-3">Stock</th>
@@ -310,7 +311,6 @@
           const v = doc.data();
           ventasGlobales.push(v);
 
-          // Formatear la descripción de los productos comprados
           let descProductos = "";
           if (v.items && Array.isArray(v.items)) {
             descProductos = v.items.map(i => `${i.cantPres}x ${i.nombre} (${i.presNombre})`).join(", ");
