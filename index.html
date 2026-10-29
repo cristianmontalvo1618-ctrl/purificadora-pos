@@ -62,7 +62,7 @@
     <section class="lg:col-span-2 flex flex-col gap-6">
       <div class="relative">
         <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">🔍</span>
-        <input type="text" id="barcodeInput" oninput="filtrarProductos()" placeholder="Buscar filtro, tapa, garrafón, membrana o código..." class="w-full bg-white border-0 shadow-sm rounded-xl py-3.5 pl-11 pr-4 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm" autofocus>
+        <input type="text" id="barcodeInput" oninput="filtrarProductos()" placeholder="Buscar tapa, filtro, garrafón, membrana o código..." class="w-full bg-white border-0 shadow-sm rounded-xl py-3.5 pl-11 pr-4 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm" autofocus>
       </div>
 
       <div id="gridProductos" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -124,53 +124,74 @@
 
   </main>
 
-  <!-- MODAL DE SELECCIÓN DE PRESENTACIÓN (PIEZA, MEDIO MILLAR, MILLAR) -->
-  <div id="modalPresentacion" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[75] flex items-center justify-center p-4">
+  <!-- MODAL EXCLUSIVO PARA CONFIGURACIÓN DE TAPAS (COLOR + PRECIO EDITABLE + MULTIPLICADOR) -->
+  <div id="modalTapaConfig" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[75] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100">
       <div class="flex justify-between items-center border-b pb-3">
         <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-          <span>📦</span> Seleccionar Presentación
+          <span>🧢</span> Venta de Tapa
         </h3>
-        <button onclick="cerrarModalPresentacion()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+        <button onclick="cerrarModalTapa()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
       </div>
 
-      <div id="modalProdInfo" class="bg-teal-50 p-3 rounded-2xl text-center border border-teal-100">
-        <h4 id="modalProdNombre" class="font-bold text-teal-900 text-sm"></h4>
-        <p id="modalProdPrecioBase" class="text-xs text-teal-700 mt-0.5"></p>
+      <div class="bg-teal-50 p-3 rounded-2xl text-center border border-teal-100">
+        <h4 id="tapaModalNombre" class="font-bold text-teal-900 text-sm"></h4>
+        <p class="text-[11px] text-teal-700 mt-0.5">Personaliza el color y precio unitario</p>
       </div>
 
-      <div class="space-y-2">
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Presentación de venta:</label>
+      <!-- Selección de Color -->
+      <div class="space-y-1">
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Color de la Tapa:</label>
+        <select id="selectTapaColor" class="w-full border border-slate-300 p-2.5 rounded-xl text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-teal-600">
+          <option value="Azul">🔵 Azul</option>
+          <option value="Blanca">⚪ Blanca</option>
+          <option value="Roja">🔴 Roja</option>
+          <option value="Morada">🟣 Morada</option>
+          <option value="Azul Cielo">🩵 Azul Cielo</option>
+        </select>
+      </div>
+
+      <!-- Precio por Pieza Editable -->
+      <div class="space-y-1">
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Precio por Pieza ($):</label>
+        <input type="number" step="0.01" id="inputTapaPrecioPz" oninput="actualizarSubtotalTapa()" class="w-full border border-slate-300 p-2.5 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600">
+      </div>
+
+      <!-- Selección de Presentación -->
+      <div class="space-y-1">
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Presentación:</label>
         <div class="grid grid-cols-3 gap-2">
-          <button type="button" onclick="setPresentacion('pieza', 1, 'Pieza(s)')" id="btnPresPieza" class="py-2.5 px-2 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition">
-            👤 Pieza <span class="block text-[10px] opacity-80">1 pza</span>
+          <button type="button" onclick="setTapaPresentacion('pieza', 1, 'Pieza(s)')" id="btnTapaPieza" class="py-2 px-1 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition">
+            👤 Pieza <span class="block text-[9px] opacity-80">1 pza</span>
           </button>
-          <button type="button" onclick="setPresentacion('medio', 500, 'Medio Millar')" id="btnPresMedio" class="py-2.5 px-2 rounded-xl border font-bold text-xs bg-white text-slate-700 hover:bg-slate-50 transition">
-            📦 Med. Millar <span class="block text-[10px] opacity-60">500 pzas</span>
+          <button type="button" onclick="setTapaPresentacion('medio', 500, 'Medio Millar')" id="btnTapaMedio" class="py-2 px-1 rounded-xl border font-bold text-xs bg-white text-slate-700 hover:bg-slate-50 transition">
+            📦 Med. Millar <span class="block text-[9px] opacity-60">500 pzas</span>
           </button>
-          <button type="button" onclick="setPresentacion('millar', 1000, 'Millar')" id="btnPresMillar" class="py-2.5 px-2 rounded-xl border font-bold text-xs bg-white text-slate-700 hover:bg-slate-50 transition">
-            📦 Millar <span class="block text-[10px] opacity-60">1,000 pzas</span>
+          <button type="button" onclick="setTapaPresentacion('millar', 1000, 'Millar')" id="btnTapaMillar" class="py-2 px-1 rounded-xl border font-bold text-xs bg-white text-slate-700 hover:bg-slate-50 transition">
+            📦 Millar <span class="block text-[9px] opacity-60">1,000 pzas</span>
           </button>
         </div>
       </div>
 
-      <div class="space-y-2">
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Cantidad de <span id="labelPresTipo">Piezas</span>:</label>
+      <!-- Cantidad -->
+      <div class="space-y-1">
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Cantidad de <span id="labelTapaPresTipo">Piezas</span>:</label>
         <div class="flex items-center gap-2">
-          <button onclick="cambiarCantModal(-1)" class="bg-slate-200 hover:bg-slate-300 w-10 h-10 rounded-xl font-bold text-lg flex items-center justify-center">-</button>
-          <input type="number" id="inputCantPres" value="1" min="1" class="flex-1 border border-slate-300 p-2.5 rounded-xl text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-teal-600">
-          <button onclick="cambiarCantModal(1)" class="bg-slate-200 hover:bg-slate-300 w-10 h-10 rounded-xl font-bold text-lg flex items-center justify-center">+</button>
+          <button onclick="cambiarCantTapa(-1)" class="bg-slate-200 hover:bg-slate-300 w-9 h-9 rounded-xl font-bold text-lg flex items-center justify-center">-</button>
+          <input type="number" id="inputCantTapa" value="1" min="1" oninput="actualizarSubtotalTapa()" class="flex-1 border border-slate-300 p-2 rounded-xl text-center text-base font-bold focus:outline-none focus:ring-2 focus:ring-teal-600">
+          <button onclick="cambiarCantTapa(1)" class="bg-slate-200 hover:bg-slate-300 w-9 h-9 rounded-xl font-bold text-lg flex items-center justify-center">+</button>
         </div>
       </div>
 
+      <!-- Subtotal -->
       <div class="bg-slate-50 p-3 rounded-xl flex justify-between items-center text-xs font-bold text-slate-700 border">
-        <span>Total calculado:</span>
-        <span id="modalSubtotalCalc" class="text-base text-teal-700 font-black">$0.00</span>
+        <span>Subtotal a Cobrar:</span>
+        <span id="tapaSubtotalCalc" class="text-base text-teal-700 font-black">$0.00</span>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 pt-2">
-        <button onclick="cerrarModalPresentacion()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl text-xs transition">Cancelar</button>
-        <button onclick="confirmarAgregarConPresentacion()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs transition shadow">Añadir a Orden</button>
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button onclick="cerrarModalTapa()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Cancelar</button>
+        <button onclick="confirmarAgregarTapa()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow">Añadir a Orden</button>
       </div>
     </div>
   </div>
@@ -222,7 +243,6 @@
       <div class="text-4xl">🎉</div>
       <h3 class="font-bold text-lg text-slate-800">¡Venta Exitosa!</h3>
 
-      <!-- Contenedor del Ticket Imprimible / PDF -->
       <div id="ticketImprimible" class="bg-slate-50 p-4 rounded-2xl text-left font-mono text-xs text-slate-700 space-y-1.5 border border-slate-200">
         <div class="text-center font-bold text-sm text-[#00838f]">ALEM Distribuidora</div>
         <div class="text-center text-[10px] text-slate-500">Comprobante de Venta</div>
@@ -235,7 +255,6 @@
         <div id="ticketExtraEfectivo" class="space-y-1 text-[11px]"></div>
       </div>
 
-      <!-- Opciones de Compartir (PDF y WhatsApp) -->
       <div class="space-y-2 pt-2">
         <button onclick="descargarPDF()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl text-xs transition shadow flex items-center justify-center gap-2">
           <span>📥</span> Descargar Recibo en PDF
@@ -298,16 +317,23 @@
     let unsubProductos = null;
     let procesandoVenta = false;
 
-    // Variables temporales para el modal de presentación
-    let productoSeleccionadoTemp = null;
-    let presTipoActual = 'pieza';
-    let presMultiplicadorActual = 1;
-    let presNombreActual = 'Pieza(s)';
+    // Variables temporales para modal de tapas
+    let tapaSeleccionadaTemp = null;
+    let tapaTipoPres = 'pieza';
+    let tapaMultiplicador = 1;
+    let tapaNombrePres = 'Pieza(s)';
 
     const barcodeInput = document.getElementById("barcodeInput");
 
     function esc(s) {
       return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function esTapa(producto) {
+      if (!producto) return false;
+      const cat = (producto.categoria || '').toLowerCase();
+      const nom = (producto.nombre || '').toLowerCase();
+      return cat.includes('tapa') || nom.includes('tapa');
     }
 
     function mostrarAlerta(mensaje, titulo = "Aviso importante", icono = "⚠️") {
@@ -404,19 +430,21 @@
 
       lista.forEach(p => {
         const colorBadge = getBadgeColorClass(p.categoria);
+        const esTapaProducto = esTapa(p);
+
         grid.innerHTML += `
-          <div onclick="abrirModalPresentacionPorId('${p.id}')" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition cursor-pointer group">
+          <div onclick="procesarSeleccionProducto('${p.id}')" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition cursor-pointer group">
             <div>
               <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${colorBadge} mb-2">
                 ${esc(p.categoria || 'General')}
               </span>
               <h3 class="font-bold text-slate-800 text-base group-hover:text-teal-700 transition">${esc(p.nombre)}</h3>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">Cod: ${esc(p.codigo)} | Stock: ${p.stock}</p>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">Cod: ${esc(p.codigo)} | Stock: ${p.stock} pzas</p>
             </div>
             <div class="flex justify-between items-center mt-4">
               <span class="text-lg font-black text-[#00838f]">$${parseFloat(p.precio).toFixed(2)} <span class="text-[10px] text-slate-400 font-normal">c/u</span></span>
-              <button onclick="event.stopPropagation(); abrirModalPresentacionPorId('${p.id}')" class="bg-slate-100 group-hover:bg-teal-600 group-hover:text-white text-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold text-xs transition shadow-sm">
-                📦 Vender
+              <button onclick="event.stopPropagation(); procesarSeleccionProducto('${p.id}')" class="bg-slate-100 group-hover:bg-teal-600 group-hover:text-white text-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold text-xs transition shadow-sm">
+                ${esTapaProducto ? '🧢 Configurar' : '+ Añadir'}
               </button>
             </div>
           </div>
@@ -440,7 +468,7 @@
 
       const prod = productosCatalogo.find(p => p.codigo === codigo);
       if (prod) {
-        abrirModalPresentacion(prod);
+        procesarSeleccionProducto(prod.id);
       } else {
         mostrarAlerta("El código escaneado no coincide con ningún producto registrado.", "Producto no encontrado", "🔍");
       }
@@ -448,102 +476,134 @@
       filtrarProductos();
     }
 
-    // ---------- Modal de Presentación (Pieza / Med. Millar / Millar) ----------
-    function abrirModalPresentacionPorId(id) {
+    // ---------- Lógica de Selección Condicional ----------
+    function procesarSeleccionProducto(id) {
       const prod = productosCatalogo.find(p => p.id === id);
-      if (prod) abrirModalPresentacion(prod);
+      if (!prod) return;
+
+      if (esTapa(prod)) {
+        abrirModalTapa(prod);
+      } else {
+        agregarProductoRegular(prod);
+      }
     }
 
-    function abrirModalPresentacion(prod) {
-      productoSeleccionadoTemp = prod;
-      setPresentacion('pieza', 1, 'Pieza(s)');
-      document.getElementById("inputCantPres").value = 1;
-
-      document.getElementById("modalProdNombre").innerText = prod.nombre;
-      document.getElementById("modalProdPrecioBase").innerText = `Precio base por pieza: $${parseFloat(prod.precio).toFixed(2)}`;
-
-      actualizarSubtotalModal();
-      document.getElementById("modalPresentacion").classList.remove("hidden");
+    function agregarProductoRegular(prod) {
+      const idx = carrito.findIndex(i => i.id === prod.id && !i.esTapa);
+      if (idx > -1) {
+        carrito[idx].cantPres++;
+        carrito[idx].cantPiezasReales++;
+        carrito[idx].subtotal = carrito[idx].precioBase * carrito[idx].cantPres;
+      } else {
+        carrito.push({
+          id: prod.id,
+          codigo: prod.codigo,
+          nombre: prod.nombre,
+          precioBase: parseFloat(prod.precio),
+          esTapa: false,
+          presNombre: 'Pieza(s)',
+          cantPres: 1,
+          cantPiezasReales: 1,
+          subtotal: parseFloat(prod.precio)
+        });
+      }
+      renderizarCarrito();
     }
 
-    function cerrarModalPresentacion() {
-      document.getElementById("modalPresentacion").classList.add("hidden");
-      productoSeleccionadoTemp = null;
+    // ---------- Modal de Tapas (Color + Precio Editable + Presentación) ----------
+    function abrirModalTapa(prod) {
+      tapaSeleccionadaTemp = prod;
+      setTapaPresentacion('pieza', 1, 'Pieza(s)');
+      document.getElementById("inputCantTapa").value = 1;
+      document.getElementById("selectTapaColor").value = "Azul";
+      
+      // Cargamos el precio base editable en el input
+      document.getElementById("inputTapaPrecioPz").value = parseFloat(prod.precio).toFixed(2);
+
+      document.getElementById("tapaModalNombre").innerText = prod.nombre;
+
+      actualizarSubtotalTapa();
+      document.getElementById("modalTapaConfig").classList.remove("hidden");
+    }
+
+    function cerrarModalTapa() {
+      document.getElementById("modalTapaConfig").classList.add("hidden");
+      tapaSeleccionadaTemp = null;
       focarScanner();
     }
 
-    function setPresentacion(tipo, mult, nombre) {
-      presTipoActual = tipo;
-      presMultiplicadorActual = mult;
-      presNombreActual = nombre;
+    function setTapaPresentacion(tipo, mult, nombre) {
+      tapaTipoPres = tipo;
+      tapaMultiplicador = mult;
+      tapaNombrePres = nombre;
 
-      document.getElementById("labelPresTipo").innerText = nombre;
+      document.getElementById("labelTapaPresTipo").innerText = nombre;
 
-      const btnP = document.getElementById("btnPresPieza");
-      const btnM = document.getElementById("btnPresMedio");
-      const btnMi = document.getElementById("btnPresMillar");
+      const btnP = document.getElementById("btnTapaPieza");
+      const btnM = document.getElementById("btnTapaMedio");
+      const btnMi = document.getElementById("btnTapaMillar");
 
       [btnP, btnM, btnMi].forEach(b => {
-        b.className = "py-2.5 px-2 rounded-xl border font-bold text-xs bg-white text-slate-700 hover:bg-slate-50 transition";
+        b.className = "py-2 px-1 rounded-xl border font-bold text-xs bg-white text-slate-700 hover:bg-slate-50 transition";
       });
 
-      if (tipo === 'pieza') btnP.className = "py-2.5 px-2 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition";
-      if (tipo === 'medio') btnM.className = "py-2.5 px-2 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition";
-      if (tipo === 'millar') btnMi.className = "py-2.5 px-2 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition";
+      if (tipo === 'pieza') btnP.className = "py-2 px-1 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition";
+      if (tipo === 'medio') btnM.className = "py-2 px-1 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition";
+      if (tipo === 'millar') btnMi.className = "py-2 px-1 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition";
 
-      actualizarSubtotalModal();
+      actualizarSubtotalTapa();
     }
 
-    function cambiarCantModal(delta) {
-      const input = document.getElementById("inputCantPres");
+    function cambiarCantTapa(delta) {
+      const input = document.getElementById("inputCantTapa");
       let val = parseInt(input.value) || 1;
       val += delta;
       if (val < 1) val = 1;
       input.value = val;
-      actualizarSubtotalModal();
+      actualizarSubtotalTapa();
     }
 
-    document.getElementById("inputCantPres").addEventListener("input", actualizarSubtotalModal);
-
-    function actualizarSubtotalModal() {
-      if (!productoSeleccionadoTemp) return;
-      const cant = parseInt(document.getElementById("inputCantPres").value) || 1;
-      const precioUnitPres = productoSeleccionadoTemp.precio * presMultiplicadorActual;
-      const subtotal = precioUnitPres * cant;
-      document.getElementById("modalSubtotalCalc").innerText = `$${subtotal.toFixed(2)}`;
+    function actualizarSubtotalTapa() {
+      if (!tapaSeleccionadaTemp) return;
+      const precioPzEditable = parseFloat(document.getElementById("inputTapaPrecioPz").value) || 0;
+      const cant = parseInt(document.getElementById("inputCantTapa").value) || 1;
+      const subtotal = precioPzEditable * tapaMultiplicador * cant;
+      document.getElementById("tapaSubtotalCalc").innerText = `$${subtotal.toFixed(2)}`;
     }
 
-    function confirmarAgregarConPresentacion() {
-      if (!productoSeleccionadoTemp) return;
-      const cantPres = parseInt(document.getElementById("inputCantPres").value) || 1;
-      const precioBase = productoSeleccionadoTemp.precio;
-      const precioUnitPres = precioBase * presMultiplicadorActual;
-      const totalPiezasReales = presMultiplicadorActual * cantPres;
+    function confirmarAgregarTapa() {
+      if (!tapaSeleccionadaTemp) return;
+      const precioPzEditable = parseFloat(document.getElementById("inputTapaPrecioPz").value) || 0;
+      const cantPres = parseInt(document.getElementById("inputCantTapa").value) || 1;
+      const color = document.getElementById("selectTapaColor").value;
+      const totalPiezasReales = tapaMultiplicador * cantPres;
+      const subtotal = precioPzEditable * totalPiezasReales;
 
-      // Buscar si ya está en el carrito con la misma presentación
-      const existingIndex = carrito.findIndex(i => i.id === productoSeleccionadoTemp.id && i.presTipo === presTipoActual);
+      const itemNombreCompleto = `${tapaSeleccionadaTemp.nombre} (${color})`;
+
+      const existingIndex = carrito.findIndex(i => i.id === tapaSeleccionadaTemp.id && i.color === color && i.tapaTipoPres === tapaTipoPres && i.precioBase === precioPzEditable);
 
       if (existingIndex > -1) {
         carrito[existingIndex].cantPres += cantPres;
         carrito[existingIndex].cantPiezasReales += totalPiezasReales;
-        carrito[existingIndex].subtotal = carrito[existingIndex].precioUnitPres * carrito[existingIndex].cantPres;
+        carrito[existingIndex].subtotal += subtotal;
       } else {
         carrito.push({
-          id: productoSeleccionadoTemp.id,
-          codigo: productoSeleccionadoTemp.codigo,
-          nombre: productoSeleccionadoTemp.nombre,
-          precioBase: precioBase,
-          presTipo: presTipoActual,
-          presNombre: presNombreActual,
-          multiplicador: presMultiplicadorActual,
+          id: tapaSeleccionadaTemp.id,
+          codigo: tapaSeleccionadaTemp.codigo,
+          nombre: itemNombreCompleto,
+          color: color,
+          precioBase: precioPzEditable,
+          esTapa: true,
+          tapaTipoPres: tapaTipoPres,
+          presNombre: tapaNombrePres,
           cantPres: cantPres,
           cantPiezasReales: totalPiezasReales,
-          precioUnitPres: precioUnitPres,
-          subtotal: precioUnitPres * cantPres
+          subtotal: subtotal
         });
       }
 
-      cerrarModalPresentacion();
+      cerrarModalTapa();
       renderizarCarrito();
     }
 
@@ -677,11 +737,11 @@
           codigo: i.codigo,
           nombre: i.nombre,
           precioBase: i.precioBase,
-          presTipo: i.presTipo,
+          esTapa: i.esTapa || false,
+          color: i.color || 'N/A',
           presNombre: i.presNombre,
           cantPres: i.cantPres,
           cantPiezasReales: i.cantPiezasReales,
-          precioUnitPres: i.precioUnitPres,
           subtotal: i.subtotal
         })),
         total: total,
@@ -713,7 +773,7 @@
       try {
         const batch = db.batch();
         batch.set(db.collection("ventas").doc(), venta);
-        // Descuenta del inventario la cantidad total de piezas reales (ej. 2000 piezas por 2 millares)
+        
         carrito.forEach(item => {
           batch.update(db.collection("productos").doc(item.id), {
             stock: firebase.firestore.FieldValue.increment(-item.cantPiezasReales)
@@ -823,4 +883,3 @@
   </script>
 </body>
 </html>
-
