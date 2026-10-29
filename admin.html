@@ -11,7 +11,7 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
 
-  <!-- PANTALLA DE LOGIN (Oculta por defecto con 'hidden' para evitar el delay visual) -->
+  <!-- PANTALLA DE LOGIN -->
   <div id="modalLogin" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl space-y-6 text-center border border-slate-100">
       <div class="bg-teal-50 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl">🔐</div>
@@ -52,7 +52,7 @@
     </div>
   </header>
 
-  <main class="p-6 max-w-7xl mx-auto w-full space-y-8">
+  <main class="p-6 max-w-[1500px] mx-auto w-full space-y-8">
 
     <!-- Registro y Lista de Productos -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -63,7 +63,7 @@
         <form id="formProducto" onsubmit="guardarProducto(event)" class="space-y-3.5">
           <input type="text" id="prodCodigo" placeholder="Código de Barras / QR" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-600 outline-none transition" required>
           <input type="text" id="prodNombre" placeholder="Nombre del Producto" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-600 outline-none transition" required>
-          <input type="text" id="prodCategoria" placeholder="Categoría (Ej. Garrafones, Filtros)" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-600 outline-none transition" required>
+          <input type="text" id="prodCategoria" placeholder="Categoría (Ej. Garrafones, Filtros, Tapas)" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-600 outline-none transition" required>
           <div class="grid grid-cols-2 gap-3">
             <input type="number" step="0.01" id="prodPrecio" placeholder="Precio ($)" class="bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-600 outline-none transition" required>
             <input type="number" id="prodStock" placeholder="Stock" class="bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-600 outline-none transition" required>
@@ -101,7 +101,6 @@
         <thead>
           <tr class="border-b text-xs text-slate-400 uppercase tracking-wider">
             <th class="p-3">Cliente</th>
-            <th class="p-3">Teléfono</th>
             <th class="p-3">Total Deuda</th>
             <th class="p-3">Fecha Límite</th>
             <th class="p-3">Estado</th>
@@ -121,7 +120,7 @@
 
         <div class="flex flex-wrap gap-2">
           <button onclick="realizarCorteCaja()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-4 py-3 rounded-xl transition shadow flex items-center gap-2">
-            <span>✂️</span> Realizar corte de caja por día & Exportar base de datos
+            <span>✂️</span> Realizar corte de caja por día & Exportar
           </button>
           <button onclick="exportarExcelCompleto()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold text-sm px-4 py-3 rounded-xl transition shadow flex items-center gap-2">
             <span>📥</span> Exportar Todo a Excel
@@ -134,6 +133,7 @@
           <tr class="border-b text-xs text-slate-400 uppercase tracking-wider">
             <th class="p-3">Fecha / Hora</th>
             <th class="p-3">Método</th>
+            <th class="p-3">Productos / Descripción</th>
             <th class="p-3">Total</th>
             <th class="p-3">Estado</th>
             <th class="p-3">Cliente</th>
@@ -144,7 +144,7 @@
     </section>
   </main>
 
-  <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO (ELIMINAR / LIMPIAR) -->
+  <!-- MODAL DE CONFIRMACIÓN -->
   <div id="modalConfirmacion" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
       <div class="text-4xl">⚠️</div>
@@ -157,7 +157,7 @@
     </div>
   </div>
 
-  <!-- MODAL DE ALERTAS PERSONALIZADO Y ELEGANTE -->
+  <!-- MODAL DE ALERTAS -->
   <div id="modalAlerta" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
       <div id="alertaIcono" class="text-4xl">⚠️</div>
@@ -187,7 +187,6 @@
     let productosMap = {};
     let listeners = [];
 
-    // ---------- Utilidades ----------
     function esc(s) {
       return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     }
@@ -217,7 +216,6 @@
       }
     }
 
-    // ---------- Autenticación ----------
     function iniciarSesion(e) {
       e.preventDefault();
       const email = document.getElementById("adminEmailInput").value.trim();
@@ -257,7 +255,6 @@
       listeners = [];
     }
 
-    // ---------- Datos en tiempo real ----------
     function iniciarListeners() {
       // Inventario
       listeners.push(db.collection("productos").onSnapshot(snap => {
@@ -293,7 +290,6 @@
           tbody.innerHTML += `
             <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
               <td class="p-3 font-semibold text-slate-700">${esc(v.cliente || 'N/A')}</td>
-              <td class="p-3 text-slate-500">${esc(v.telefono || 'N/A')}</td>
               <td class="p-3 font-bold text-amber-700">$${parseFloat(v.total).toFixed(2)}</td>
               <td class="p-3 text-sm">${esc(v.fechaLimite || 'N/A')}</td>
               <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${v.estado === 'Pagado' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${esc(v.estado)}</span></td>
@@ -313,10 +309,20 @@
         snap.forEach(doc => {
           const v = doc.data();
           ventasGlobales.push(v);
+
+          // Formatear la descripción de los productos comprados
+          let descProductos = "";
+          if (v.items && Array.isArray(v.items)) {
+            descProductos = v.items.map(i => `${i.cantPres}x ${i.nombre} (${i.presNombre})`).join(", ");
+          } else {
+            descProductos = "N/A";
+          }
+
           tbody.innerHTML += `
             <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
               <td class="p-3 text-sm text-slate-600">${new Date(v.fecha).toLocaleString()}</td>
               <td class="p-3 text-sm font-medium">${esc(v.metodoPago)}</td>
+              <td class="p-3 text-xs text-slate-700 font-medium">${esc(descProductos)}</td>
               <td class="p-3 font-bold text-slate-800">$${parseFloat(v.total).toFixed(2)}</td>
               <td class="p-3 text-sm">${esc(v.estado)}</td>
               <td class="p-3 text-sm text-slate-500">${esc(v.cliente || '---')}</td>
@@ -326,7 +332,6 @@
       }, manejarErrorFirestore));
     }
 
-    // ---------- Acciones ----------
     async function guardarProducto(e) {
       e.preventDefault();
       const p = {
@@ -397,15 +402,19 @@
     }
 
     function generarCSV(lista, nombreArchivo) {
-      let csv = "Fecha_Hora,Metodo_Pago,Total,Estado,Cliente,Telefono\n";
+      let csv = "Fecha_Hora,Metodo_Pago,Productos_Descripcion,Total,Estado,Cliente\n";
       lista.forEach(v => {
+        let descStr = "";
+        if (v.items && Array.isArray(v.items)) {
+          descStr = v.items.map(i => `${i.cantPres}x ${i.nombre} (${i.presNombre})`).join(" | ");
+        }
         csv += [
           csvSeguro(new Date(v.fecha).toLocaleString()),
           csvSeguro(v.metodoPago),
+          csvSeguro(descStr),
           csvSeguro(v.total),
           csvSeguro(v.estado),
-          csvSeguro(v.cliente),
-          csvSeguro(v.telefono)
+          csvSeguro(v.cliente)
         ].join(",") + "\n";
       });
 
