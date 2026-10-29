@@ -11,8 +11,8 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
 
-  <!-- PANTALLA DE LOGIN (Con fondo sólido por defecto para ocultar cualquier delay de Firebase) -->
-  <div id="modalLogin" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
+  <!-- PANTALLA DE LOGIN (Invisible y bloqueada por defecto para evitar cualquier parpadeo al cambiar de página) -->
+  <div id="modalLogin" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
     <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl space-y-6 text-center border border-slate-100">
       <div class="bg-teal-50 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl">🔐</div>
       <div>
@@ -235,8 +235,9 @@
       const modalLogin = document.getElementById("modalLogin");
       
       if (user && user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-        // Si ya está autenticado, ocultamos el login completamente
-        modalLogin.classList.add("hidden");
+        // Mantiene el login totalmente invisible si ya hay sesión activa
+        modalLogin.classList.remove("opacity-100");
+        modalLogin.classList.add("opacity-0", "pointer-events-none");
         iniciarListeners();
       } else {
         if (user) {
@@ -245,8 +246,9 @@
         }
         limpiarPantalla();
         document.getElementById("adminPassInput").value = "";
-        // Si no está autenticado, aseguramos que se muestre el login sobre el fondo sólido
-        modalLogin.classList.remove("hidden");
+        // Muestra el login de forma suave si no hay sesión
+        modalLogin.classList.remove("opacity-0", "pointer-events-none");
+        modalLogin.classList.add("opacity-100");
       }
     });
 
@@ -414,4 +416,23 @@
       });
 
       const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-      const link =
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = nombreArchivo;
+      link.click();
+    }
+
+    function pedirConfirmacionLimpieza() {
+      mostrarConfirmacion("Limpiar Sistema", "⚠️ ¿Estás completamente seguro de borrar TODO el historial de ventas?\n\n(Esto no borra tus productos del inventario, solo las ventas.)", async () => {
+        try {
+          const snap = await db.collection("ventas").get();
+          const batch = db.batch();
+          snap.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+          mostrarAlerta("El historial de ventas se ha limpiado por completo.", "¡Sistema Limpio!", "✨");
+        } catch (err) { manejarErrorFirestore(err); }
+      });
+    }
+  </script>
+</body>
+</html>
