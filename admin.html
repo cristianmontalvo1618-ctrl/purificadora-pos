@@ -11,8 +11,8 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
 
-  <!-- PANTALLA DE LOGIN (Invisible y bloqueada por defecto para evitar parpadeos) -->
-  <div id="modalLogin" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+  <!-- PANTALLA DE LOGIN (Oculta por defecto con 'hidden' para evitar el delay visual) -->
+  <div id="modalLogin" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl space-y-6 text-center border border-slate-100">
       <div class="bg-teal-50 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl">🔐</div>
       <div>
@@ -144,7 +144,7 @@
     </section>
   </main>
 
-  <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO -->
+  <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO (ELIMINAR / LIMPIAR) -->
   <div id="modalConfirmacion" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
       <div class="text-4xl">⚠️</div>
@@ -157,7 +157,7 @@
     </div>
   </div>
 
-  <!-- MODAL DE ALERTAS PERSONALIZADO -->
+  <!-- MODAL DE ALERTAS PERSONALIZADO Y ELEGANTE -->
   <div id="modalAlerta" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-100">
       <div id="alertaIcono" class="text-4xl">⚠️</div>
@@ -187,6 +187,7 @@
     let productosMap = {};
     let listeners = [];
 
+    // ---------- Utilidades ----------
     function esc(s) {
       return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     }
@@ -231,12 +232,8 @@
 
     auth.onAuthStateChanged(user => {
       detenerListeners();
-      const modalLogin = document.getElementById("modalLogin");
-      
       if (user && user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-        // Oculta y bloquea clics para que la pantalla quede interactiva normalmente
-        modalLogin.classList.remove("opacity-100");
-        modalLogin.classList.add("opacity-0", "pointer-events-none");
+        document.getElementById("modalLogin").classList.add("hidden");
         iniciarListeners();
       } else {
         if (user) {
@@ -245,9 +242,7 @@
         }
         limpiarPantalla();
         document.getElementById("adminPassInput").value = "";
-        // Muestra el login y habilita los clics correctamente
-        modalLogin.classList.remove("opacity-0", "pointer-events-none");
-        modalLogin.classList.add("opacity-100");
+        document.getElementById("modalLogin").classList.remove("hidden");
       }
     });
 
@@ -264,6 +259,7 @@
 
     // ---------- Datos en tiempo real ----------
     function iniciarListeners() {
+      // Inventario
       listeners.push(db.collection("productos").onSnapshot(snap => {
         const tbody = document.getElementById("tablaInventario");
         tbody.innerHTML = "";
@@ -288,6 +284,7 @@
         });
       }, manejarErrorFirestore));
 
+      // Créditos
       listeners.push(db.collection("ventas").where("metodoPago", "==", "Credito").onSnapshot(snap => {
         const tbody = document.getElementById("tablaCreditos");
         tbody.innerHTML = "";
@@ -308,6 +305,7 @@
         });
       }, manejarErrorFirestore));
 
+      // Historial de ventas
       listeners.push(db.collection("ventas").onSnapshot(snap => {
         const tbody = document.getElementById("tablaVentas");
         tbody.innerHTML = "";
@@ -328,6 +326,7 @@
       }, manejarErrorFirestore));
     }
 
+    // ---------- Acciones ----------
     async function guardarProducto(e) {
       e.preventDefault();
       const p = {
