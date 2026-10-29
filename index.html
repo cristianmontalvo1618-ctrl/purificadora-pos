@@ -90,11 +90,10 @@
           <span class="text-2xl font-black text-[#00838f]" id="totalVenta">$0.00</span>
         </div>
 
-        <!-- DATOS DEL CLIENTE (VISIBLE PARA CUALQUIER MÉTODO DE PAGO) -->
+        <!-- DATOS DEL CLIENTE (SOLO NOMBRE) -->
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
-          <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Datos del Cliente (Opcional / Requerido en A Plazo):</span>
-          <input type="text" id="clienteNombre" placeholder="Nombre del Cliente" class="w-full bg-white border border-slate-300 p-2 rounded-lg text-xs font-medium">
-          <input type="tel" id="clienteTel" placeholder="Teléfono (10 dígitos para WhatsApp)" class="w-full bg-white border border-slate-300 p-2 rounded-lg text-xs font-medium">
+          <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nombre del Cliente (Opcional / Requerido en A Plazo):</span>
+          <input type="text" id="clienteNombre" placeholder="Nombre del Cliente" class="w-full bg-white border border-slate-300 p-2.5 rounded-lg text-xs font-medium">
           <div id="seccionFechaLimite" class="hidden flex items-center gap-2 pt-1">
             <span class="text-[11px] font-bold text-amber-800 w-28">Fecha Límite *:</span>
             <input type="date" id="fechaLimite" class="flex-1 bg-white border border-amber-300 p-1.5 rounded-lg text-xs">
@@ -277,30 +276,11 @@
         <button onclick="descargarPDF()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl text-xs transition shadow flex items-center justify-center gap-2">
           <span>📥</span> Descargar Recibo en PDF
         </button>
-        <button onclick="abrirModalWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs transition shadow flex items-center justify-center gap-2">
-          <span>💬</span> Enviar por WhatsApp al Cliente
-        </button>
       </div>
 
       <button onclick="cerrarModalTicket()" class="w-full bg-teal-100 hover:bg-teal-200 text-teal-800 font-bold py-2.5 rounded-xl text-xs transition">
         Nueva Venta
       </button>
-    </div>
-  </div>
-
-  <!-- MODAL ELEGANTE PARA INGRESAR WHATSAPP -->
-  <div id="modalWhatsApp" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100 text-center">
-      <div class="text-4xl">💬</div>
-      <h3 class="font-bold text-lg text-slate-800">Enviar Recibo por WhatsApp</h3>
-      <p class="text-xs text-slate-500">Ingresa el número de teléfono del cliente (10 dígitos con código de país, ej: 521...):</p>
-
-      <input type="tel" id="inputTelCliente" placeholder="Ej. 5215512345678" class="w-full border border-slate-300 p-3 rounded-xl text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-emerald-500">
-
-      <div class="grid grid-cols-2 gap-2 pt-2">
-        <button onclick="cerrarModalWhatsApp()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Cancelar</button>
-        <button onclick="confirmarEnvioWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow">Enviar</button>
-      </div>
     </div>
   </div>
 
@@ -748,12 +728,11 @@
     async function ejecutarProcesarVenta(total, recibido, cambio) {
       if (procesandoVenta) return;
       if (!auth.currentUser) {
-        mostrarAlerta("Tu sesión expiró. Inicia sesión de novo.", "Sesión requerida", "🔐");
+        mostrarAlerta("Tu sesión expiró. Inicia sesión de nuevo.", "Sesión requerida", "🔐");
         return;
       }
 
       const clienteInput = document.getElementById("clienteNombre").value.trim();
-      const telInput = document.getElementById("clienteTel").value.trim();
       const fechaLimInput = document.getElementById("fechaLimite").value;
 
       const venta = {
@@ -777,8 +756,7 @@
         cambio: cambio,
         estado: metodoSeleccionado === "Credito" ? "Pendiente" : "Pagado",
         vendedor: auth.currentUser.email,
-        cliente: clienteInput || "Público en General",
-        telefono: telInput || ""
+        cliente: clienteInput || "Público en General"
       };
 
       if (metodoSeleccionado === "Credito") {
@@ -805,7 +783,6 @@
         carrito = [];
         renderizarCarrito();
         document.getElementById("clienteNombre").value = "";
-        document.getElementById("clienteTel").value = "";
         document.getElementById("fechaLimite").value = "";
       } catch (err) {
         console.error(err);
@@ -846,53 +823,6 @@
 
     function descargarPDF() {
       window.print();
-    }
-
-    function abrirModalWhatsApp() {
-      document.getElementById("inputTelCliente").value = ultimaVentaDatos && ultimaVentaDatos.telefono ? ultimaVentaDatos.telefono : "";
-      document.getElementById("modalWhatsApp").classList.remove("hidden");
-      setTimeout(() => document.getElementById("inputTelCliente").focus(), 100);
-    }
-
-    function cerrarModalWhatsApp() {
-      document.getElementById("modalWhatsApp").classList.add("hidden");
-    }
-
-    function confirmarEnvioWhatsApp() {
-      const tel = document.getElementById("inputTelCliente").value.trim();
-      if (!tel) {
-        mostrarAlerta("Por favor ingresa un número de teléfono válido.", "Número requerido", "📱");
-        return;
-      }
-      cerrarModalWhatsApp();
-
-      const v = ultimaVentaDatos;
-      let texto = `💧 *ALEM Distribuidora* 💧\n`;
-      texto += `_Comprobante de Compra_ \n`;
-      texto += `-----------------------------------\n`;
-      texto += `👤 *Cliente:* ${v.cliente}\n`;
-      texto += `📅 *Fecha:* ${new Date(v.fecha).toLocaleString()}\n`;
-      texto += `-----------------------------------\n`;
-
-      v.items.forEach(i => {
-        texto += `▪️ *${i.cantPres}x* ${i.nombre} (${i.presNombre}) — *$${i.subtotal.toFixed(2)}*\n`;
-      });
-
-      texto += `-----------------------------------\n`;
-      texto += `💰 *TOTAL A PAGAR: $${v.total.toFixed(2)}*\n`;
-      texto += `💳 *Método de Pago:* ${v.metodoPago}\n`;
-
-      if (v.metodoPago === "Efectivo") {
-        texto += `💵 Recibido: $${v.pagoCon.toFixed(2)}\n`;
-        texto += `🪙 Cambio entregado: $${v.cambio.toFixed(2)}\n`;
-      } else if (v.metodoPago === "Credito") {
-        texto += `⏳ Fecha Límite: ${v.fechaLimite}\n`;
-      }
-
-      texto += `-----------------------------------\n`;
-      texto += `¡Agradecemos su preferencia! 🙏✨`;
-
-      window.open(`https://wa.me/${tel.replace(/\D/g, '')}?text=${encodeURIComponent(texto)}`, '_blank');
     }
 
     function cerrarModalTicket() {
