@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -59,7 +58,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
         <h2 class="font-bold text-lg mb-4 text-slate-800 flex items-center gap-2">
-          <span>📦</span> Registrar Producto
+          <span>📦</span> Registrar Producto (Tapa Maestra u Otros)
         </h2>
         <form id="formProducto" onsubmit="guardarProducto(event)" class="space-y-3.5">
           <input type="text" id="prodCodigo" placeholder="Código de Barras / QR" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-600 outline-none transition" required>
@@ -75,7 +74,7 @@
 
       <section class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 overflow-x-auto">
         <h2 class="font-bold text-lg mb-4 text-slate-800 flex items-center gap-2">
-          <span>📋</span> Inventario Registrado (Incluyendo Tapas por Color)
+          <span>📋</span> Inventario Registrado (Maestros y Variantes de Tapas)
         </h2>
         <table class="w-full text-left border-collapse">
           <thead>
@@ -85,7 +84,7 @@
               <th class="p-3">Categoría</th>
               <th class="p-3">Precio</th>
               <th class="p-3">Stock</th>
-              <th class="p-3 text-center">Acción</th>
+              <th class="p-3 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody id="tablaInventario"></tbody>
@@ -144,6 +143,35 @@
       </table>
     </section>
   </main>
+
+  <!-- MODAL PARA EDITAR STOCK / PRECIO DE UN PRODUCTO -->
+  <div id="modalEditar" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-lg text-slate-800">Editar Producto / Stock</h3>
+        <button onclick="cerrarModalEditar()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+      </div>
+      <form onsubmit="actualizarProductoAdmin(event)" class="space-y-3">
+        <input type="hidden" id="editId">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">Nombre:</label>
+          <input type="text" id="editNombre" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm" required>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">Precio ($):</label>
+          <input type="number" step="0.01" id="editPrecio" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm" required>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">Stock Actual:</label>
+          <input type="number" id="editStock" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-sm font-bold text-teal-700" required>
+        </div>
+        <div class="grid grid-cols-2 gap-2 pt-2">
+          <button type="button" onclick="cerrarModalEditar()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Cancelar</button>
+          <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- MODAL DE CONFIRMACIÓN -->
   <div id="modalConfirmacion" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -272,8 +300,11 @@
               <td class="p-3 text-slate-500">${esc(p.categoria)}</td>
               <td class="p-3 text-slate-700 font-bold">$${parseFloat(p.precio).toFixed(2)}</td>
               <td class="p-3 font-bold ${p.stock < 5 ? 'text-rose-600' : 'text-emerald-600'}">${esc(p.stock)}</td>
-              <td class="p-3 text-center">
-                <button onclick="eliminarProducto('${doc.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-xl transition shadow-sm">
+              <td class="p-3 text-center space-x-1">
+                <button onclick="abrirModalEditar('${doc.id}', '${esc(p.nombre)}', ${p.precio}, ${p.stock})" class="bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs font-bold px-2.5 py-1.5 rounded-xl transition shadow-sm">
+                  ✏️ Editar Stock
+                </button>
+                <button onclick="eliminarProducto('${doc.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-2.5 py-1.5 rounded-xl transition shadow-sm">
                   🗑️ Eliminar
                 </button>
               </td>
@@ -348,9 +379,35 @@
       } catch (err) { manejarErrorFirestore(err); }
     }
 
+    function abrirModalEditar(id, nombre, precio, stock) {
+      document.getElementById("editId").value = id;
+      document.getElementById("editNombre").value = nombre;
+      document.getElementById("editPrecio").value = precio;
+      document.getElementById("editStock").value = stock;
+      document.getElementById("modalEditar").classList.remove("hidden");
+    }
+
+    function cerrarModalEditar() {
+      document.getElementById("modalEditar").classList.add("hidden");
+    }
+
+    async function actualizarProductoAdmin(e) {
+      e.preventDefault();
+      const id = document.getElementById("editId").value;
+      const nombre = document.getElementById("editNombre").value.trim();
+      const precio = parseFloat(document.getElementById("editPrecio").value);
+      const stock = parseInt(document.getElementById("editStock").value);
+
+      try {
+        await db.collection("productos").doc(id).update({ nombre, precio, stock });
+        cerrarModalEditar();
+        mostrarAlerta("El stock y datos del producto se actualizaron correctamente.", "¡Actualizado!", "✅");
+      } catch (err) { manejarErrorFirestore(err); }
+    }
+
     function eliminarProducto(id) {
       const nombre = productosMap[id] || "este producto";
-      mostrarConfirmacion("Eliminar Producto", `¿Estás seguro de que deseas eliminar el producto "${nombre}" del inventario?`, async () => {
+      mostrarConfirmacion("Eliminar Producto", `¿Estás seguro de que deseas eliminar "${nombre}" del inventario?`, async () => {
         try {
           await db.collection("productos").doc(id).delete();
           mostrarAlerta(`Se eliminó "${nombre}" correctamente.`, "Producto Eliminado", "🗑️");
