@@ -124,11 +124,11 @@
 
   </main>
 
-  <!-- MODAL EXCLUSIVO PARA CONFIGURACIÓN DE TAPAS (LIMPIO Y DIRECTO) -->
+  <!-- MODAL EXCLUSIVO PARA CONFIGURACIÓN DE TAPAS -->
   <div id="modalTapaConfig" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[75] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-3.5 border border-slate-100">
       <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-lg text-slate-800">
+        <h3 class="font-bold text-lg text-slate-800" id="tituloModalTapa">
           Venta de Tapa
         </h3>
         <button onclick="cerrarModalTapa()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
@@ -136,39 +136,42 @@
 
       <div class="bg-teal-50 p-2.5 rounded-2xl text-center border border-teal-100">
         <h4 id="tapaModalNombre" class="font-bold text-teal-900 text-sm"></h4>
-        <p class="text-[11px] text-teal-700 mt-0.5">Selecciona tipo, color, precio y presentación</p>
+        <p class="text-[11px] text-teal-700 mt-0.5" id="subtituloModalTapa">Selecciona tipo, color, precio y presentación</p>
       </div>
 
-      <div class="space-y-1">
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo de Tapa:</label>
-        <select id="selectTapaTipo" class="w-full border border-slate-300 p-2.5 rounded-xl text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-teal-600">
-          <option value="BNF">BNF</option>
-          <option value="Ciel">Ciel</option>
-          <option value="Presion">Presion</option>
-          <option value="Electro">Electro</option>
-          <option value="Peñapura">Peñapura</option>
-          <option value="Cristal">Cristal</option>
-        </select>
-      </div>
+      <!-- ESTE BLOQUE DE TIPO Y COLOR SOLO APARECE SI ES EL PRODUCTO MAESTRO -->
+      <div id="bloqueSelectoresMaestro" class="space-y-3.5">
+        <div class="space-y-1">
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo de Tapa:</label>
+          <select id="selectTapaTipo" class="w-full border border-slate-300 p-2.5 rounded-xl text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-teal-600">
+            <option value="BNF">BNF</option>
+            <option value="Ciel">Ciel</option>
+            <option value="Presion">Presion</option>
+            <option value="Electro">Electro</option>
+            <option value="Peñapura">Peñapura</option>
+            <option value="Cristal">Cristal</option>
+          </select>
+        </div>
 
-      <div class="space-y-1">
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Color de la Tapa:</label>
-        <select id="selectTapaColor" class="w-full border border-slate-300 p-2.5 rounded-xl text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-teal-600">
-          <option value="Amarilla">Amarilla</option>
-          <option value="Azul Pepsi">Azul Pepsi</option>
-          <option value="Azul pitufo">Azul pitufo</option>
-          <option value="Blanca">Blanca</option>
-          <option value="Morado">Morado</option>
-          <option value="Naranja">Naranja</option>
-          <option value="Natural">Natural</option>
-          <option value="Negra">Negra</option>
-          <option value="Roja">Roja</option>
-          <option value="Rosa translúcido">Rosa translúcido</option>
-          <option value="Salmon">Salmon</option>
-          <option value="Verde aqua">Verde aqua</option>
-          <option value="Verde mate">Verde mate</option>
-          <option value="Verde traslúcido">Verde traslúcido</option>
-        </select>
+        <div class="space-y-1">
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Color de la Tapa:</label>
+          <select id="selectTapaColor" class="w-full border border-slate-300 p-2.5 rounded-xl text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-teal-600">
+            <option value="Amarilla">Amarilla</option>
+            <option value="Azul Pepsi">Azul Pepsi</option>
+            <option value="Azul pitufo">Azul pitufo</option>
+            <option value="Blanca">Blanca</option>
+            <option value="Morado">Morado</option>
+            <option value="Naranja">Naranja</option>
+            <option value="Natural">Natural</option>
+            <option value="Negra">Negra</option>
+            <option value="Roja">Roja</option>
+            <option value="Rosa translúcido">Rosa translúcido</option>
+            <option value="Salmon">Salmon</option>
+            <option value="Verde aqua">Verde aqua</option>
+            <option value="Verde mate">Verde mate</option>
+            <option value="Verde traslúcido">Verde traslúcido</option>
+          </select>
+        </div>
       </div>
 
       <div class="space-y-1">
@@ -335,6 +338,7 @@
     let procesandoVenta = false;
 
     let tapaSeleccionadaTemp = null;
+    let esVarianteGuardada = false;
     let tapaTipoPres = 'pieza';
     let tapaMultiplicador = 1;
     let tapaNombrePres = 'Pieza(s)';
@@ -445,7 +449,8 @@
       lista.forEach(p => {
         const colorBadge = getBadgeColorClass(p.categoria);
         const esTapaProducto = esTapa(p);
-        const stockMostrado = esTapaProducto && p.codigo === 'TAPA-GENERICA' ? 'Variable' : p.stock;
+        const esVarianteTapa = p.categoria && p.categoria.toLowerCase().includes("variante");
+        const stockMostrado = esTapaProducto && !esVarianteTapa ? 'Variable' : p.stock;
 
         grid.innerHTML += `
           <div onclick="procesarSeleccionProducto('${p.id}')" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition cursor-pointer group">
@@ -528,11 +533,26 @@
       tapaSeleccionadaTemp = prod;
       setTapaPresentacion('pieza', 1, 'Pieza(s)');
       document.getElementById("inputCantTapa").value = 1;
-      document.getElementById("selectTapaTipo").value = "BNF";
-      document.getElementById("selectTapaColor").value = "Amarilla";
-      
-      document.getElementById("inputTapaPrecioPz").value = parseFloat(prod.precio).toFixed(2);
-      document.getElementById("tapaModalNombre").innerText = prod.nombre;
+
+      const bloqueSelectores = document.getElementById("bloqueSelectoresMaestro");
+      const esVariante = prod.categoria && prod.categoria.toLowerCase().includes("variante");
+      esVarianteGuardada = esVariante;
+
+      if (esVariante) {
+        // SI ES UNA VARIANTE YA GUARDADA EN EL ADMIN: Ocultamos selectores de tipo/color
+        bloqueSelectores.classList.add("hidden");
+        document.getElementById("tapaModalNombre").innerText = prod.nombre;
+        document.getElementById("subtituloModalTapa").innerText = "Selecciona precio y presentación";
+        document.getElementById("inputTapaPrecioPz").value = parseFloat(prod.precio).toFixed(2);
+      } else {
+        // SI ES EL PRODUCTO MAESTRO: Mostramos selectores completos
+        bloqueSelectores.classList.remove("hidden");
+        document.getElementById("selectTapaTipo").value = "BNF";
+        document.getElementById("selectTapaColor").value = "Amarilla";
+        document.getElementById("tapaModalNombre").innerText = prod.nombre;
+        document.getElementById("subtituloModalTapa").innerText = "Selecciona tipo, color, precio y presentación";
+        document.getElementById("inputTapaPrecioPz").value = parseFloat(prod.precio).toFixed(2);
+      }
 
       actualizarSubtotalTapa();
       document.getElementById("modalTapaConfig").classList.remove("hidden");
@@ -587,13 +607,27 @@
       if (!tapaSeleccionadaTemp) return;
       const precioPzEditable = parseFloat(document.getElementById("inputTapaPrecioPz").value) || 0;
       const cantPres = parseInt(document.getElementById("inputCantTapa").value) || 1;
-      const tipoTapa = document.getElementById("selectTapaTipo").value;
-      const color = document.getElementById("selectTapaColor").value;
       const totalPiezasReales = tapaMultiplicador * cantPres;
       const subtotal = precioPzEditable * totalPiezasReales;
 
-      const itemNombreCompleto = `Tapa ${tipoTapa} (${color})`;
-      const varianteId = `${tapaSeleccionadaTemp.id}_${tipoTapa}_${color}`.replace(/\s+/g, '_').toLowerCase();
+      let itemNombreCompleto = "";
+      let varianteId = "";
+      let tipoTapaVal = "N/A";
+      let colorVal = "N/A";
+
+      if (esVarianteGuardada) {
+        // Si ya era variante guardada, usa su propio nombre y su ID directo
+        itemNombreCompleto = tapaSeleccionadaTemp.nombre;
+        varianteId = tapaSeleccionadaTemp.id;
+      } else {
+        // Si era maestro, toma lo que eligió en los selectores
+        const tipoTapa = document.getElementById("selectTapaTipo").value;
+        const color = document.getElementById("selectTapaColor").value;
+        itemNombreCompleto = `Tapa ${tipoTapa} (${color})`;
+        varianteId = `${tapaSeleccionadaTemp.id}_${tipoTapa}_${color}`.replace(/\s+/g, '_').toLowerCase();
+        tipoTapaVal = tipoTapa;
+        colorVal = color;
+      }
 
       const existingIndex = carrito.findIndex(i => i.varianteId === varianteId && i.precioBase === precioPzEditable);
 
@@ -607,8 +641,8 @@
           varianteId: varianteId,
           codigo: tapaSeleccionadaTemp.codigo,
           nombre: itemNombreCompleto,
-          tipoTapa: tipoTapa,
-          color: color,
+          tipoTapa: tipoTapaVal,
+          color: colorVal,
           precioBase: precioPzEditable,
           esTapa: true,
           tapaTipoPres: tapaTipoPres,
@@ -831,7 +865,7 @@
       } catch (err) {
         console.error(err);
         if (err && err.code === "permission-denied") {
-          mostrarAlerta("Tu usuario no tiene permiso para registrar esta venta.", "Acceso Denegado", "⛔");
+          mostrarAlerta("No tienes permiso para registrar esta venta.", "Acceso Denegado", "⛔");
         } else {
           mostrarAlerta("No se pudo registrar la venta. Revisa tu conexión e intenta de nuevo.", "Error", "❌");
         }
