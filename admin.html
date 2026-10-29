@@ -11,8 +11,8 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
 
-  <!-- PANTALLA DE LOGIN (Firebase Authentication) -->
-  <div id="modalLogin" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+  <!-- PANTALLA DE LOGIN (Oculta por defecto con 'hidden' para evitar el delay visual) -->
+  <div id="modalLogin" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl space-y-6 text-center border border-slate-100">
       <div class="bg-teal-50 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl">🔐</div>
       <div>
@@ -181,8 +181,6 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // ⚠️ CAMBIA ESTO por el correo real del administrador (el mismo que crees en Firebase).
-    // Esto solo sirve para la interfaz; la seguridad real está en las reglas de Firestore.
     const ADMIN_EMAIL = "adminl@alem.com";
 
     let ventasGlobales = [];
@@ -239,7 +237,6 @@
         iniciarListeners();
       } else {
         if (user) {
-          // Inició sesión alguien que no es el admin (ej. un cajero)
           auth.signOut();
           mostrarAlerta("Esta cuenta no tiene permisos de administrador.", "Acceso Denegado", "⛔");
         }
@@ -260,7 +257,7 @@
       listeners = [];
     }
 
-    // ---------- Datos en tiempo real (solo después de iniciar sesión) ----------
+    // ---------- Datos en tiempo real ----------
     function iniciarListeners() {
       // Inventario
       listeners.push(db.collection("productos").onSnapshot(snap => {
@@ -393,7 +390,6 @@
       generarCSV(ventasGlobales, `Historial_BaseDeDatos_Ventas_${new Date().toISOString().slice(0,10)}.csv`);
     }
 
-    // Evita inyección de fórmulas en Excel (celdas que empiezan con = + - @)
     function csvSeguro(valor) {
       let s = String(valor ?? "");
       if (/^[=+\-@]/.test(s)) s = "'" + s;
@@ -434,5 +430,3 @@
   </script>
 </body>
 </html>
-
-
