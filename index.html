@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -63,7 +62,7 @@
     <section class="lg:col-span-2 flex flex-col gap-6">
       <div class="relative">
         <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">🔍</span>
-        <input type="text" id="barcodeInput" oninput="filtrarProductos()" placeholder="Buscar filtro, resina, garrafón, membrana o código..." class="w-full bg-white border-0 shadow-sm rounded-xl py-3.5 pl-11 pr-4 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm" autofocus>
+        <input type="text" id="barcodeInput" oninput="filtrarProductos()" placeholder="Buscar filtro, tapa, garrafón, membrana o código..." class="w-full bg-white border-0 shadow-sm rounded-xl py-3.5 pl-11 pr-4 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm" autofocus>
       </div>
 
       <div id="gridProductos" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -124,6 +123,57 @@
     </section>
 
   </main>
+
+  <!-- MODAL DE SELECCIÓN DE PRESENTACIÓN (PIEZA, MEDIO MILLAR, MILLAR) -->
+  <div id="modalPresentacion" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[75] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+          <span>📦</span> Seleccionar Presentación
+        </h3>
+        <button onclick="cerrarModalPresentacion()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+      </div>
+
+      <div id="modalProdInfo" class="bg-teal-50 p-3 rounded-2xl text-center border border-teal-100">
+        <h4 id="modalProdNombre" class="font-bold text-teal-900 text-sm"></h4>
+        <p id="modalProdPrecioBase" class="text-xs text-teal-700 mt-0.5"></p>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Presentación de venta:</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="setPresentacion('pieza', 1, 'Pieza(s)')" id="btnPresPieza" class="py-2.5 px-2 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition">
+            👤 Pieza <span class="block text-[10px] opacity-80">1 pza</span>
+          </button>
+          <button type="button" onclick="setPresentacion('medio', 500, 'Medio Millar')" id="btnPresMedio" class="py-2.5 px-2 rounded-xl border font-bold text-xs bg-white text-slate-700 hover:bg-slate-50 transition">
+            📦 Med. Millar <span class="block text-[10px] opacity-60">500 pzas</span>
+          </button>
+          <button type="button" onclick="setPresentacion('millar', 1000, 'Millar')" id="btnPresMillar" class="py-2.5 px-2 rounded-xl border font-bold text-xs bg-white text-slate-700 hover:bg-slate-50 transition">
+            📦 Millar <span class="block text-[10px] opacity-60">1,000 pzas</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Cantidad de <span id="labelPresTipo">Piezas</span>:</label>
+        <div class="flex items-center gap-2">
+          <button onclick="cambiarCantModal(-1)" class="bg-slate-200 hover:bg-slate-300 w-10 h-10 rounded-xl font-bold text-lg flex items-center justify-center">-</button>
+          <input type="number" id="inputCantPres" value="1" min="1" class="flex-1 border border-slate-300 p-2.5 rounded-xl text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-teal-600">
+          <button onclick="cambiarCantModal(1)" class="bg-slate-200 hover:bg-slate-300 w-10 h-10 rounded-xl font-bold text-lg flex items-center justify-center">+</button>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 p-3 rounded-xl flex justify-between items-center text-xs font-bold text-slate-700 border">
+        <span>Total calculado:</span>
+        <span id="modalSubtotalCalc" class="text-base text-teal-700 font-black">$0.00</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <button onclick="cerrarModalPresentacion()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-xl text-xs transition">Cancelar</button>
+        <button onclick="confirmarAgregarConPresentacion()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs transition shadow">Añadir a Orden</button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL DE COBRO EN EFECTIVO -->
   <div id="modalEfectivo" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -248,9 +298,14 @@
     let unsubProductos = null;
     let procesandoVenta = false;
 
+    // Variables temporales para el modal de presentación
+    let productoSeleccionadoTemp = null;
+    let presTipoActual = 'pieza';
+    let presMultiplicadorActual = 1;
+    let presNombreActual = 'Pieza(s)';
+
     const barcodeInput = document.getElementById("barcodeInput");
 
-    // Escapa texto para insertarlo de forma segura en HTML
     function esc(s) {
       return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     }
@@ -314,7 +369,7 @@
       }
     });
 
-    // ---------- Catálogo (solo con sesión iniciada) ----------
+    // ---------- Catálogo ----------
     function iniciarCatalogo() {
       if (unsubProductos) unsubProductos();
       unsubProductos = db.collection("productos").onSnapshot(snap => {
@@ -332,7 +387,7 @@
     function getBadgeColorClass(categoria) {
       const cat = (categoria || '').toLowerCase();
       if (cat.includes('filtro')) return 'bg-emerald-100 text-emerald-700';
-      if (cat.includes('envase') || cat.includes('garraf')) return 'bg-cyan-100 text-cyan-700';
+      if (cat.includes('envase') || cat.includes('garraf') || cat.includes('tapa')) return 'bg-cyan-100 text-cyan-700';
       if (cat.includes('insumo') || cat.includes('sal')) return 'bg-indigo-100 text-indigo-700';
       if (cat.includes('equipo') || cat.includes('membrana')) return 'bg-purple-100 text-purple-700';
       return 'bg-slate-100 text-slate-600';
@@ -350,18 +405,18 @@
       lista.forEach(p => {
         const colorBadge = getBadgeColorClass(p.categoria);
         grid.innerHTML += `
-          <div onclick="agregarAlCarrito('${p.id}')" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition cursor-pointer group">
+          <div onclick="abrirModalPresentacionPorId('${p.id}')" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition cursor-pointer group">
             <div>
               <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${colorBadge} mb-2">
                 ${esc(p.categoria || 'General')}
               </span>
               <h3 class="font-bold text-slate-800 text-base group-hover:text-teal-700 transition">${esc(p.nombre)}</h3>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">Cod: ${esc(p.codigo)}</p>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">Cod: ${esc(p.codigo)} | Stock: ${p.stock}</p>
             </div>
             <div class="flex justify-between items-center mt-4">
-              <span class="text-lg font-black text-[#00838f]">$${parseFloat(p.precio).toFixed(2)}</span>
-              <button onclick="event.stopPropagation(); agregarAlCarrito('${p.id}')" class="bg-slate-100 group-hover:bg-teal-600 group-hover:text-white text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg transition shadow-sm">
-                +
+              <span class="text-lg font-black text-[#00838f]">$${parseFloat(p.precio).toFixed(2)} <span class="text-[10px] text-slate-400 font-normal">c/u</span></span>
+              <button onclick="event.stopPropagation(); abrirModalPresentacionPorId('${p.id}')" class="bg-slate-100 group-hover:bg-teal-600 group-hover:text-white text-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold text-xs transition shadow-sm">
+                📦 Vender
               </button>
             </div>
           </div>
@@ -385,28 +440,114 @@
 
       const prod = productosCatalogo.find(p => p.codigo === codigo);
       if (prod) {
-        agregarAlCarrito(prod.id);
+        abrirModalPresentacion(prod);
       } else {
         mostrarAlerta("El código escaneado no coincide con ningún producto registrado.", "Producto no encontrado", "🔍");
       }
       barcodeInput.value = "";
       filtrarProductos();
+    }
+
+    // ---------- Modal de Presentación (Pieza / Med. Millar / Millar) ----------
+    function abrirModalPresentacionPorId(id) {
+      const prod = productosCatalogo.find(p => p.id === id);
+      if (prod) abrirModalPresentacion(prod);
+    }
+
+    function abrirModalPresentacion(prod) {
+      productoSeleccionadoTemp = prod;
+      setPresentacion('pieza', 1, 'Pieza(s)');
+      document.getElementById("inputCantPres").value = 1;
+
+      document.getElementById("modalProdNombre").innerText = prod.nombre;
+      document.getElementById("modalProdPrecioBase").innerText = `Precio base por pieza: $${parseFloat(prod.precio).toFixed(2)}`;
+
+      actualizarSubtotalModal();
+      document.getElementById("modalPresentacion").classList.remove("hidden");
+    }
+
+    function cerrarModalPresentacion() {
+      document.getElementById("modalPresentacion").classList.add("hidden");
+      productoSeleccionadoTemp = null;
       focarScanner();
     }
 
-    function agregarAlCarrito(id) {
-      const prod = productosCatalogo.find(p => p.id === id);
-      if (!prod) return;
+    function setPresentacion(tipo, mult, nombre) {
+      presTipoActual = tipo;
+      presMultiplicadorActual = mult;
+      presNombreActual = nombre;
 
-      const idx = carrito.findIndex(i => i.id === id);
-      if (idx > -1) {
-        carrito[idx].cant++;
+      document.getElementById("labelPresTipo").innerText = nombre;
+
+      const btnP = document.getElementById("btnPresPieza");
+      const btnM = document.getElementById("btnPresMedio");
+      const btnMi = document.getElementById("btnPresMillar");
+
+      [btnP, btnM, btnMi].forEach(b => {
+        b.className = "py-2.5 px-2 rounded-xl border font-bold text-xs bg-white text-slate-700 hover:bg-slate-50 transition";
+      });
+
+      if (tipo === 'pieza') btnP.className = "py-2.5 px-2 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition";
+      if (tipo === 'medio') btnM.className = "py-2.5 px-2 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition";
+      if (tipo === 'millar') btnMi.className = "py-2.5 px-2 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition";
+
+      actualizarSubtotalModal();
+    }
+
+    function cambiarCantModal(delta) {
+      const input = document.getElementById("inputCantPres");
+      let val = parseInt(input.value) || 1;
+      val += delta;
+      if (val < 1) val = 1;
+      input.value = val;
+      actualizarSubtotalModal();
+    }
+
+    document.getElementById("inputCantPres").addEventListener("input", actualizarSubtotalModal);
+
+    function actualizarSubtotalModal() {
+      if (!productoSeleccionadoTemp) return;
+      const cant = parseInt(document.getElementById("inputCantPres").value) || 1;
+      const precioUnitPres = productoSeleccionadoTemp.precio * presMultiplicadorActual;
+      const subtotal = precioUnitPres * cant;
+      document.getElementById("modalSubtotalCalc").innerText = `$${subtotal.toFixed(2)}`;
+    }
+
+    function confirmarAgregarConPresentacion() {
+      if (!productoSeleccionadoTemp) return;
+      const cantPres = parseInt(document.getElementById("inputCantPres").value) || 1;
+      const precioBase = productoSeleccionadoTemp.precio;
+      const precioUnitPres = precioBase * presMultiplicadorActual;
+      const totalPiezasReales = presMultiplicadorActual * cantPres;
+
+      // Buscar si ya está en el carrito con la misma presentación
+      const existingIndex = carrito.findIndex(i => i.id === productoSeleccionadoTemp.id && i.presTipo === presTipoActual);
+
+      if (existingIndex > -1) {
+        carrito[existingIndex].cantPres += cantPres;
+        carrito[existingIndex].cantPiezasReales += totalPiezasReales;
+        carrito[existingIndex].subtotal = carrito[existingIndex].precioUnitPres * carrito[existingIndex].cantPres;
       } else {
-        carrito.push({ ...prod, cant: 1 });
+        carrito.push({
+          id: productoSeleccionadoTemp.id,
+          codigo: productoSeleccionadoTemp.codigo,
+          nombre: productoSeleccionadoTemp.nombre,
+          precioBase: precioBase,
+          presTipo: presTipoActual,
+          presNombre: presNombreActual,
+          multiplicador: presMultiplicadorActual,
+          cantPres: cantPres,
+          cantPiezasReales: totalPiezasReales,
+          precioUnitPres: precioUnitPres,
+          subtotal: precioUnitPres * cantPres
+        });
       }
+
+      cerrarModalPresentacion();
       renderizarCarrito();
     }
 
+    // ---------- Carrito ----------
     function renderizarCarrito() {
       const itemsDiv = document.getElementById("carritoItems");
       const vacioMsg = document.getElementById("carritoVacioMsg");
@@ -420,18 +561,16 @@
 
       let total = 0;
       carrito.forEach((p, idx) => {
-        const subtotal = p.precio * p.cant;
-        total += subtotal;
+        total += p.subtotal;
 
         itemsDiv.innerHTML += `
           <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs">
             <div class="flex-1 pr-2">
               <p class="font-bold text-slate-700">${esc(p.nombre)}</p>
-              <p class="text-slate-400">$${parseFloat(p.precio).toFixed(2)} c/u</p>
+              <p class="text-teal-700 font-semibold">${p.cantPres}x ${esc(p.presNombre)} <span class="text-slate-400 font-normal">(${p.cantPiezasReales} pzas)</span></p>
             </div>
             <div class="flex items-center gap-2">
-              <span class="font-bold text-slate-800 bg-white px-2 py-0.5 rounded border">x${p.cant}</span>
-              <span class="font-black text-teal-700 w-16 text-right">$${subtotal.toFixed(2)}</span>
+              <span class="font-black text-slate-800 w-16 text-right">$${p.subtotal.toFixed(2)}</span>
               <button onclick="eliminarItem(${idx})" class="text-rose-400 hover:text-rose-600 font-bold px-1">✕</button>
             </div>
           </div>
@@ -466,7 +605,7 @@
     }
 
     function obtenerTotal() {
-      return carrito.reduce((s, i) => s + (i.precio * i.cant), 0);
+      return carrito.reduce((s, i) => s + i.subtotal, 0);
     }
 
     function preProcesarVenta() {
@@ -525,7 +664,7 @@
     }
 
     async function ejecutarProcesarVenta(total, recibido, cambio) {
-      if (procesandoVenta) return; // evita doble clic
+      if (procesandoVenta) return;
       if (!auth.currentUser) {
         mostrarAlerta("Tu sesión expiró. Inicia sesión de nuevo.", "Sesión requerida", "🔐");
         return;
@@ -533,13 +672,24 @@
 
       const venta = {
         fecha: new Date().toISOString(),
-        items: carrito.map(i => ({ id: i.id, codigo: i.codigo, nombre: i.nombre, precio: i.precio, cant: i.cant })),
+        items: carrito.map(i => ({
+          id: i.id,
+          codigo: i.codigo,
+          nombre: i.nombre,
+          precioBase: i.precioBase,
+          presTipo: i.presTipo,
+          presNombre: i.presNombre,
+          cantPres: i.cantPres,
+          cantPiezasReales: i.cantPiezasReales,
+          precioUnitPres: i.precioUnitPres,
+          subtotal: i.subtotal
+        })),
         total: total,
         metodoPago: metodoSeleccionado,
         pagoCon: recibido,
         cambio: cambio,
         estado: metodoSeleccionado === "Credito" ? "Pendiente" : "Pagado",
-        vendedor: auth.currentUser.email // quién hizo la venta
+        vendedor: auth.currentUser.email
       };
 
       if (metodoSeleccionado === "Credito") {
@@ -561,12 +711,12 @@
       document.getElementById("btnProcesar").disabled = true;
 
       try {
-        // Venta y descuento de stock en una sola operación
         const batch = db.batch();
         batch.set(db.collection("ventas").doc(), venta);
+        // Descuenta del inventario la cantidad total de piezas reales (ej. 2000 piezas por 2 millares)
         carrito.forEach(item => {
           batch.update(db.collection("productos").doc(item.id), {
-            stock: firebase.firestore.FieldValue.increment(-item.cant)
+            stock: firebase.firestore.FieldValue.increment(-item.cantPiezasReales)
           });
         });
         await batch.commit();
@@ -597,7 +747,7 @@
 
       let itemsHtml = "";
       v.items.forEach(i => {
-        itemsHtml += `<div class="flex justify-between"><span>${i.cant}x ${esc(i.nombre)}</span><span>$${(i.precio * i.cant).toFixed(2)}</span></div>`;
+        itemsHtml += `<div class="flex justify-between"><span>${i.cantPres}x ${esc(i.nombre)} (${i.presNombre})</span><span>$${i.subtotal.toFixed(2)}</span></div>`;
       });
       document.getElementById("ticketDetalleItems").innerHTML = itemsHtml;
       document.getElementById("ticketDetalleTotal").innerText = `$${v.total.toFixed(2)}`;
@@ -620,7 +770,6 @@
     }
 
     function abrirModalWhatsApp() {
-      // Si la venta ya tiene teléfono registrado (caso crédito), lo ponemos por defecto
       document.getElementById("inputTelCliente").value = ultimaVentaDatos && ultimaVentaDatos.telefono ? ultimaVentaDatos.telefono : "";
       document.getElementById("modalWhatsApp").classList.remove("hidden");
       setTimeout(() => document.getElementById("inputTelCliente").focus(), 100);
@@ -646,7 +795,7 @@
       texto += `-----------------------------------\n`;
 
       v.items.forEach(i => {
-        texto += `▪️ *${i.cant}x* ${i.nombre} — *$${(i.precio * i.cant).toFixed(2)}*\n`;
+        texto += `▪️ *${i.cantPres}x* ${i.nombre} (${i.presNombre}) — *$${i.subtotal.toFixed(2)}*\n`;
       });
 
       texto += `-----------------------------------\n`;
@@ -675,4 +824,3 @@
 </body>
 </html>
 
-      
