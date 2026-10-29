@@ -124,30 +124,43 @@
 
   </main>
 
-  <!-- MODAL EXCLUSIVO PARA CONFIGURACIÓN DE TAPAS (COLOR + PRECIO EDITABLE + MULTIPLICADOR) -->
+  <!-- MODAL EXCLUSIVO PARA CONFIGURACIÓN DE TAPAS (TIPO + COLOR + PRECIO EDITABLE + MULTIPLICADOR) -->
   <div id="modalTapaConfig" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[75] flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-3.5 border border-slate-100">
       <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-          <span>🧢</span> Venta de Tapa
+        <h3 class="font-bold text-lg text-slate-800">
+          Venta de Tapa
         </h3>
         <button onclick="cerrarModalTapa()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
       </div>
 
-      <div class="bg-teal-50 p-3 rounded-2xl text-center border border-teal-100">
+      <div class="bg-teal-50 p-2.5 rounded-2xl text-center border border-teal-100">
         <h4 id="tapaModalNombre" class="font-bold text-teal-900 text-sm"></h4>
-        <p class="text-[11px] text-teal-700 mt-0.5">Personaliza el color y precio unitario</p>
+        <p class="text-[11px] text-teal-700 mt-0.5">Selecciona el tipo, color y precio unitario</p>
+      </div>
+
+      <!-- Selección de Tipo de Tapa -->
+      <div class="space-y-1">
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo de Tapa:</label>
+        <select id="selectTapaTipo" class="w-full border border-slate-300 p-2.5 rounded-xl text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-teal-600">
+          <option value="BNF">BNF</option>
+          <option value="Ciel">Ciel</option>
+          <option value="Presion">Presion</option>
+          <option value="Electro">Electro</option>
+          <option value="Peñapura">Peñapura</option>
+          <option value="Cristal">Cristal</option>
+        </select>
       </div>
 
       <!-- Selección de Color -->
       <div class="space-y-1">
         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Color de la Tapa:</label>
         <select id="selectTapaColor" class="w-full border border-slate-300 p-2.5 rounded-xl text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-teal-600">
-          <option value="Azul">🔵 Azul</option>
-          <option value="Blanca">⚪ Blanca</option>
-          <option value="Roja">🔴 Roja</option>
-          <option value="Morada">🟣 Morada</option>
-          <option value="Azul Cielo">🩵 Azul Cielo</option>
+          <option value="Azul">Azul</option>
+          <option value="Blanca">Blanca</option>
+          <option value="Roja">Roja</option>
+          <option value="Morada">Morada</option>
+          <option value="Azul Cielo">Azul Cielo</option>
         </select>
       </div>
 
@@ -162,13 +175,13 @@
         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Presentación:</label>
         <div class="grid grid-cols-3 gap-2">
           <button type="button" onclick="setTapaPresentacion('pieza', 1, 'Pieza(s)')" id="btnTapaPieza" class="py-2 px-1 rounded-xl border font-bold text-xs bg-teal-600 text-white shadow-sm transition">
-            👤 Pieza <span class="block text-[9px] opacity-80">1 pza</span>
+            Pieza <span class="block text-[9px] opacity-80">1 pza</span>
           </button>
           <button type="button" onclick="setTapaPresentacion('medio', 500, 'Medio Millar')" id="btnTapaMedio" class="py-2 px-1 rounded-xl border font-bold text-xs bg-white text-slate-700 hover:bg-slate-50 transition">
-            📦 Med. Millar <span class="block text-[9px] opacity-60">500 pzas</span>
+            Med. Millar <span class="block text-[9px] opacity-60">500 pzas</span>
           </button>
           <button type="button" onclick="setTapaPresentacion('millar', 1000, 'Millar')" id="btnTapaMillar" class="py-2 px-1 rounded-xl border font-bold text-xs bg-white text-slate-700 hover:bg-slate-50 transition">
-            📦 Millar <span class="block text-[9px] opacity-60">1,000 pzas</span>
+            Millar <span class="block text-[9px] opacity-60">1,000 pzas</span>
           </button>
         </div>
       </div>
@@ -444,7 +457,7 @@
             <div class="flex justify-between items-center mt-4">
               <span class="text-lg font-black text-[#00838f]">$${parseFloat(p.precio).toFixed(2)} <span class="text-[10px] text-slate-400 font-normal">c/u</span></span>
               <button onclick="event.stopPropagation(); procesarSeleccionProducto('${p.id}')" class="bg-slate-100 group-hover:bg-teal-600 group-hover:text-white text-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold text-xs transition shadow-sm">
-                ${esTapaProducto ? '🧢 Configurar' : '+ Añadir'}
+                ${esTapaProducto ? 'Configurar' : '+ Añadir'}
               </button>
             </div>
           </div>
@@ -510,16 +523,15 @@
       renderizarCarrito();
     }
 
-    // ---------- Modal de Tapas (Color + Precio Editable + Presentación) ----------
+    // ---------- Modal de Tapas (Tipo + Color + Precio Editable + Presentación) ----------
     function abrirModalTapa(prod) {
       tapaSeleccionadaTemp = prod;
       setTapaPresentacion('pieza', 1, 'Pieza(s)');
       document.getElementById("inputCantTapa").value = 1;
+      document.getElementById("selectTapaTipo").value = "BNF";
       document.getElementById("selectTapaColor").value = "Azul";
       
-      // Cargamos el precio base editable en el input
       document.getElementById("inputTapaPrecioPz").value = parseFloat(prod.precio).toFixed(2);
-
       document.getElementById("tapaModalNombre").innerText = prod.nombre;
 
       actualizarSubtotalTapa();
@@ -575,13 +587,14 @@
       if (!tapaSeleccionadaTemp) return;
       const precioPzEditable = parseFloat(document.getElementById("inputTapaPrecioPz").value) || 0;
       const cantPres = parseInt(document.getElementById("inputCantTapa").value) || 1;
+      const tipoTapa = document.getElementById("selectTapaTipo").value;
       const color = document.getElementById("selectTapaColor").value;
       const totalPiezasReales = tapaMultiplicador * cantPres;
       const subtotal = precioPzEditable * totalPiezasReales;
 
-      const itemNombreCompleto = `${tapaSeleccionadaTemp.nombre} (${color})`;
+      const itemNombreCompleto = `Tapa ${tipoTapa} (${color})`;
 
-      const existingIndex = carrito.findIndex(i => i.id === tapaSeleccionadaTemp.id && i.color === color && i.tapaTipoPres === tapaTipoPres && i.precioBase === precioPzEditable);
+      const existingIndex = carrito.findIndex(i => i.id === tapaSeleccionadaTemp.id && i.tipoTapa === tipoTapa && i.color === color && i.tapaTipoPres === tapaTipoPres && i.precioBase === precioPzEditable);
 
       if (existingIndex > -1) {
         carrito[existingIndex].cantPres += cantPres;
@@ -592,6 +605,7 @@
           id: tapaSeleccionadaTemp.id,
           codigo: tapaSeleccionadaTemp.codigo,
           nombre: itemNombreCompleto,
+          tipoTapa: tipoTapa,
           color: color,
           precioBase: precioPzEditable,
           esTapa: true,
@@ -738,6 +752,7 @@
           nombre: i.nombre,
           precioBase: i.precioBase,
           esTapa: i.esTapa || false,
+          tipoTapa: i.tipoTapa || 'N/A',
           color: i.color || 'N/A',
           presNombre: i.presNombre,
           cantPres: i.cantPres,
