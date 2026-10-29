@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -73,59 +72,60 @@
 
     <!-- Derecha: Orden Actual y Cobro -->
     <section class="bg-white rounded-2xl shadow-sm p-6 flex flex-col justify-between border border-slate-100">
-      <div>
-        <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
-          <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
+      <div class="space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2 text-slate-800 font-bold text-base">
             <span class="text-teal-600">🛒</span> Orden Actual
           </div>
           <button onclick="vaciarCarrito()" class="text-rose-400 hover:text-rose-600 text-xs font-semibold">Vaciar</button>
         </div>
 
-        <div id="carritoContenedor" class="min-h-[180px] max-h-[320px] overflow-y-auto pr-1 space-y-3 mb-6">
-          <p id="carritoVacioMsg" class="text-slate-300 text-center py-16 text-sm font-medium">Aún no hay productos añadidos</p>
+        <div id="carritoContenedor" class="min-h-[150px] max-h-[220px] overflow-y-auto pr-1 space-y-3">
+          <p id="carritoVacioMsg" class="text-slate-300 text-center py-12 text-sm font-medium">Aún no hay productos añadidos</p>
           <div id="carritoItems" class="space-y-3"></div>
         </div>
 
-        <div class="flex justify-between items-center border-t border-slate-100 pt-4 mb-6">
+        <div class="flex justify-between items-center border-t border-slate-100 pt-3">
           <span class="text-slate-500 font-semibold text-sm">Total a pagar:</span>
           <span class="text-2xl font-black text-[#00838f]" id="totalVenta">$0.00</span>
         </div>
 
-        <div class="space-y-4">
-          <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">SELECCIONE MÉTODO DE PAGO:</span>
+        <!-- DATOS DEL CLIENTE (VISIBLE PARA CUALQUIER MÉTODO DE PAGO) -->
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+          <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Datos del Cliente (Opcional / Requerido en A Plazo):</span>
+          <input type="text" id="clienteNombre" placeholder="Nombre del Cliente" class="w-full bg-white border border-slate-300 p-2 rounded-lg text-xs font-medium">
+          <input type="tel" id="clienteTel" placeholder="Teléfono (10 dígitos para WhatsApp)" class="w-full bg-white border border-slate-300 p-2 rounded-lg text-xs font-medium">
+          <div id="seccionFechaLimite" class="hidden flex items-center gap-2 pt-1">
+            <span class="text-[11px] font-bold text-amber-800 w-28">Fecha Límite *:</span>
+            <input type="date" id="fechaLimite" class="flex-1 bg-white border border-amber-300 p-1.5 rounded-lg text-xs">
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">SELECCIONE MÉTODO DE PAGO:</span>
 
           <div class="grid grid-cols-3 gap-2">
-            <button id="btnEfectivo" onclick="seleccionarMetodo('Efectivo')" class="flex flex-col items-center justify-center py-3 px-2 rounded-xl text-white font-bold text-xs bg-[#00897b] shadow-md transition transform active:scale-95">
-              <span class="text-base mb-1">💵</span> Efectivo
+            <button id="btnEfectivo" onclick="seleccionarMetodo('Efectivo')" class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl text-white font-bold text-xs bg-[#00897b] shadow-md transition transform active:scale-95">
+              <span class="text-sm mb-0.5">💵</span> Efectivo
             </button>
-            <button id="btnTransferencia" onclick="seleccionarMetodo('Transferencia')" class="flex flex-col items-center justify-center py-3 px-2 rounded-xl text-white font-bold text-xs bg-[#0288d1] opacity-60 hover:opacity-100 transition transform active:scale-95">
-              <span class="text-base mb-1">🏛️</span> Transferencia
+            <button id="btnTransferencia" onclick="seleccionarMetodo('Transferencia')" class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl text-white font-bold text-xs bg-[#0288d1] opacity-60 hover:opacity-100 transition transform active:scale-95">
+              <span class="text-sm mb-0.5">🏛️</span> Transferencia
             </button>
-            <button id="btnCredito" onclick="seleccionarMetodo('Credito')" class="flex flex-col items-center justify-center py-3 px-2 rounded-xl text-white font-bold text-xs bg-[#e65100] opacity-60 hover:opacity-100 transition transform active:scale-95">
-              <span class="text-base mb-1">📅</span> A Plazo
+            <button id="btnCredito" onclick="seleccionarMetodo('Credito')" class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl text-white font-bold text-xs bg-[#e65100] opacity-60 hover:opacity-100 transition transform active:scale-95">
+              <span class="text-sm mb-0.5">📅</span> A Plazo
             </button>
-          </div>
-
-          <!-- Pago A Plazo -->
-          <div id="despliegueCredito" class="hidden bg-amber-50 p-3.5 rounded-xl border border-amber-200 space-y-2.5">
-            <input type="text" id="clienteNombre" placeholder="Nombre del Cliente *" class="w-full border border-amber-300 p-2 rounded-lg text-xs">
-            <input type="tel" id="clienteTel" placeholder="Teléfono (10 dígitos para WhatsApp)" class="w-full border border-amber-300 p-2 rounded-lg text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-[11px] font-bold text-amber-800 w-28">Fecha Límite:</span>
-              <input type="date" id="fechaLimite" class="flex-1 border border-amber-300 p-1.5 rounded-lg text-xs">
-            </div>
           </div>
         </div>
       </div>
 
-      <button id="btnProcesar" onclick="preProcesarVenta()" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl text-base shadow-md transition transform active:scale-95">
+      <button id="btnProcesar" onclick="preProcesarVenta()" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl text-sm shadow-md transition transform active:scale-95">
         ✅ Procesar Venta
       </button>
     </section>
 
   </main>
 
-  <!-- MODAL EXCLUSIVO PARA CONFIGURACIÓN DE TAPAS (TIPO + NUEVOS COLORES + PRECIO EDITABLE) -->
+  <!-- MODAL EXCLUSIVO PARA CONFIGURACIÓN DE TAPAS -->
   <div id="modalTapaConfig" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[75] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-3.5 border border-slate-100">
       <div class="flex justify-between items-center border-b pb-3">
@@ -140,7 +140,6 @@
         <p class="text-[11px] text-teal-700 mt-0.5">Selecciona el tipo, color y precio unitario</p>
       </div>
 
-      <!-- Selección de Tipo de Tapa -->
       <div class="space-y-1">
         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo de Tapa:</label>
         <select id="selectTapaTipo" class="w-full border border-slate-300 p-2.5 rounded-xl text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-teal-600">
@@ -153,7 +152,6 @@
         </select>
       </div>
 
-      <!-- Selección de Color Actualizado -->
       <div class="space-y-1">
         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Color de la Tapa:</label>
         <select id="selectTapaColor" class="w-full border border-slate-300 p-2.5 rounded-xl text-xs font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-teal-600">
@@ -174,13 +172,11 @@
         </select>
       </div>
 
-      <!-- Precio por Pieza Editable -->
       <div class="space-y-1">
         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Precio por Pieza ($):</label>
         <input type="number" step="0.01" id="inputTapaPrecioPz" oninput="actualizarSubtotalTapa()" class="w-full border border-slate-300 p-2.5 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600">
       </div>
 
-      <!-- Selección de Presentación -->
       <div class="space-y-1">
         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Presentación:</label>
         <div class="grid grid-cols-3 gap-2">
@@ -196,7 +192,6 @@
         </div>
       </div>
 
-      <!-- Cantidad -->
       <div class="space-y-1">
         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Cantidad de <span id="labelTapaPresTipo">Piezas</span>:</label>
         <div class="flex items-center gap-2">
@@ -206,7 +201,6 @@
         </div>
       </div>
 
-      <!-- Subtotal -->
       <div class="bg-slate-50 p-3 rounded-xl flex justify-between items-center text-xs font-bold text-slate-700 border">
         <span>Subtotal a Cobrar:</span>
         <span id="tapaSubtotalCalc" class="text-base text-teal-700 font-black">$0.00</span>
@@ -270,6 +264,7 @@
         <div class="text-center font-bold text-sm text-[#00838f]">ALEM Distribuidora</div>
         <div class="text-center text-[10px] text-slate-500">Comprobante de Venta</div>
         <div id="ticketDetalleFecha" class="text-center text-[10px] text-slate-400"></div>
+        <div id="ticketDetalleCliente" class="text-xs text-slate-700 font-bold pt-1"></div>
         <div class="border-t border-dashed border-slate-300 my-2"></div>
         <div id="ticketDetalleItems" class="space-y-1"></div>
         <div class="border-t border-dashed border-slate-300 my-2"></div>
@@ -340,7 +335,6 @@
     let unsubProductos = null;
     let procesandoVenta = false;
 
-    // Variables temporales para modal de tapas
     let tapaSeleccionadaTemp = null;
     let tapaTipoPres = 'pieza';
     let tapaMultiplicador = 1;
@@ -374,7 +368,6 @@
       barcodeInput.focus();
     }
 
-    // ---------- Autenticación ----------
     function iniciarSesion(e) {
       e.preventDefault();
       const email = document.getElementById("loginEmail").value.trim();
@@ -418,7 +411,6 @@
       }
     });
 
-    // ---------- Catálogo ----------
     function iniciarCatalogo() {
       if (unsubProductos) unsubProductos();
       unsubProductos = db.collection("productos").onSnapshot(snap => {
@@ -499,7 +491,6 @@
       filtrarProductos();
     }
 
-    // ---------- Lógica de Selección Condicional ----------
     function procesarSeleccionProducto(id) {
       const prod = productosCatalogo.find(p => p.id === id);
       if (!prod) return;
@@ -533,7 +524,6 @@
       renderizarCarrito();
     }
 
-    // ---------- Modal de Tapas (Tipo + Colores Actualizados + Precio Editable) ----------
     function abrirModalTapa(prod) {
       tapaSeleccionadaTemp = prod;
       setTapaPresentacion('pieza', 1, 'Pieza(s)');
@@ -631,7 +621,6 @@
       renderizarCarrito();
     }
 
-    // ---------- Carrito ----------
     function renderizarCarrito() {
       const itemsDiv = document.getElementById("carritoItems");
       const vacioMsg = document.getElementById("carritoVacioMsg");
@@ -685,7 +674,7 @@
       btnT.classList.toggle("opacity-60", metodo !== 'Transferencia');
       btnC.classList.toggle("opacity-60", metodo !== 'Credito');
 
-      document.getElementById("despliegueCredito").classList.toggle("hidden", metodo !== 'Credito');
+      document.getElementById("seccionFechaLimite").classList.toggle("hidden", metodo !== 'Credito');
     }
 
     function obtenerTotal() {
@@ -696,6 +685,15 @@
       if (carrito.length === 0) {
         mostrarAlerta("Añade al menos un producto a la orden antes de cobrar.", "Orden Vacía", "🛒");
         return;
+      }
+
+      if (metodoSeleccionado === "Credito") {
+        const cliente = document.getElementById("clienteNombre").value.trim();
+        const fechaLimite = document.getElementById("fechaLimite").value;
+        if (!cliente || !fechaLimite) {
+          mostrarAlerta("Para ventas a plazo debes ingresar obligatoriamente el nombre del cliente y la fecha límite de pago.", "Datos incompletos", "📋");
+          return;
+        }
       }
 
       if (metodoSeleccionado === "Efectivo") {
@@ -750,9 +748,13 @@
     async function ejecutarProcesarVenta(total, recibido, cambio) {
       if (procesandoVenta) return;
       if (!auth.currentUser) {
-        mostrarAlerta("Tu sesión expiró. Inicia sesión de nuevo.", "Sesión requerida", "🔐");
+        mostrarAlerta("Tu sesión expiró. Inicia sesión de novo.", "Sesión requerida", "🔐");
         return;
       }
+
+      const clienteInput = document.getElementById("clienteNombre").value.trim();
+      const telInput = document.getElementById("clienteTel").value.trim();
+      const fechaLimInput = document.getElementById("fechaLimite").value;
 
       const venta = {
         fecha: new Date().toISOString(),
@@ -774,22 +776,13 @@
         pagoCon: recibido,
         cambio: cambio,
         estado: metodoSeleccionado === "Credito" ? "Pendiente" : "Pagado",
-        vendedor: auth.currentUser.email
+        vendedor: auth.currentUser.email,
+        cliente: clienteInput || "Público en General",
+        telefono: telInput || ""
       };
 
       if (metodoSeleccionado === "Credito") {
-        const cliente = document.getElementById("clienteNombre").value.trim();
-        const tel = document.getElementById("clienteTel").value.trim();
-        const fechaLimite = document.getElementById("fechaLimite").value;
-
-        if (!cliente || !fechaLimite) {
-          mostrarAlerta("Para ventas a plazo debes ingresar el nombre del cliente y la fecha límite de pago.", "Datos incompletos", "📋");
-          return;
-        }
-
-        venta.cliente = cliente;
-        venta.telefono = tel;
-        venta.fechaLimite = fechaLimite;
+        venta.fechaLimite = fechaLimInput;
       }
 
       procesandoVenta = true;
@@ -829,6 +822,7 @@
 
     function prepararTicketModal(v) {
       document.getElementById("ticketDetalleFecha").innerText = new Date(v.fecha).toLocaleString();
+      document.getElementById("ticketDetalleCliente").innerText = `Cliente: ${v.cliente}`;
 
       let itemsHtml = "";
       v.items.forEach(i => {
@@ -843,7 +837,7 @@
         extraHtml = `<div class="flex justify-between"><span>Recibido:</span><span>$${v.pagoCon.toFixed(2)}</span></div>
                      <div class="flex justify-between"><span>Cambio:</span><span>$${v.cambio.toFixed(2)}</span></div>`;
       } else if (v.metodoPago === "Credito") {
-        extraHtml = `<div>Cliente: ${esc(v.cliente)}</div><div>Límite: ${esc(v.fechaLimite)}</div>`;
+        extraHtml = `<div>Límite: ${esc(v.fechaLimite)}</div>`;
       }
       document.getElementById("ticketExtraEfectivo").innerHTML = extraHtml;
 
@@ -876,6 +870,7 @@
       let texto = `💧 *ALEM Distribuidora* 💧\n`;
       texto += `_Comprobante de Compra_ \n`;
       texto += `-----------------------------------\n`;
+      texto += `👤 *Cliente:* ${v.cliente}\n`;
       texto += `📅 *Fecha:* ${new Date(v.fecha).toLocaleString()}\n`;
       texto += `-----------------------------------\n`;
 
@@ -891,7 +886,6 @@
         texto += `💵 Recibido: $${v.pagoCon.toFixed(2)}\n`;
         texto += `🪙 Cambio entregado: $${v.cambio.toFixed(2)}\n`;
       } else if (v.metodoPago === "Credito") {
-        texto += `👤 Cliente: ${v.cliente}\n`;
         texto += `⏳ Fecha Límite: ${v.fechaLimite}\n`;
       }
 
